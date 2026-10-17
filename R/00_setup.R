@@ -5,14 +5,12 @@
 
 # ---- Packages (every session) ----
 suppressPackageStartupMessages({
-  library(tidyverse)
-  library(MASS)      # loads select(); we restore dplyr::select below
-  library(glmnet)
-  library(ranger)
-  library(pROC)
-  library(FNN)
+  library(tidyverse)     # class notes: design grid, summaries, ggplot figures
+  library(glmnet)        # ISLR 6.5.2 lab: ridge / lasso / penalized logistic
+  library(randomForest)  # ISLR 8.3.3 lab: random forests
+  library(ROCR)          # ISLR 9.6.3 lab: ROC curves and AUC
+  library(FNN)           # nearest neighbours for our own SMOTE helper
 })
-select <- dplyr::select   # MASS masks dplyr::select -- undo that
 
 # ---- Reproducibility (simulation deck, Mistake 1) ----
 # ONE seed for the whole project. Record it in the report.
@@ -35,7 +33,8 @@ APPROACHES  <- c("baseline", "oversample", "undersample", "smote",
 CLASSIFIERS <- c("logistic", "forest")
 
 # ---- Plot theme ----
-theme_set(theme_minimal(base_size = 11))
+theme_set(theme_minimal(base_size = 11) +
+            theme(plot.background = element_rect(fill = "white", colour = NA)))
 
 # ---- Load the project's own functions (each person's file) ----
 for (f in c("R/gen_data.R", "R/approaches.R", "R/evaluate.R", "R/ensemble.R")) {

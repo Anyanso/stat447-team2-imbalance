@@ -36,7 +36,7 @@ class weights, threshold adjustment) improve *prediction*, or only the *metric*?
 ## Function contract (do not change without telling the team)
 
 ```r
-gen_data(n, prev, sep, p = 5)                    # -> tibble: x1..xp, y, p_true
+gen_data(n, prev, sep, beta0)                    # -> data frame: x1..x5, y, p.true
 fit_and_predict(train, test, approach, classifier) # -> list(prob, cutoff)
 evaluate(y, prob, cutoff = 0.5)                  # -> one-row tibble of metrics
 easy_ensemble(train, test, classifier, B = 10)   # -> list(prob, cutoff)
@@ -45,6 +45,10 @@ easy_ensemble(train, test, classifier, B = 10)   # -> list(prob, cutoff)
 `y` is always a factor with levels `c("0", "1")`, where `"1"` is the rare class.
 
 ## Rules
+
+- **Syntax:** methods are written in the base-R style of the ISLR (R edition) labs.
+  The simulation bookkeeping (design grid, summaries, figures) follows the class
+  simulation deck.
 
 - Seed is **447**, set once in `R/00_setup.R`.
 - Resample or reweight the **training** data only. Never touch the test set.
