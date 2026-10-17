@@ -32,6 +32,7 @@ APPROACHES  <- c("baseline", "oversample", "undersample", "smote",
                  "weights", "threshold")
 CLASSIFIERS <- c("logistic", "forest")
 N_TREES     <- 200                         # trees per random forest (see Step 3 timing)
+CUTOFF_CRITERION <- "youden"                # Approach C: "youden" or "f1"
 
 # ---- Plot theme ----
 theme_set(theme_minimal(base_size = 11) +
