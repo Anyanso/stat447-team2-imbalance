@@ -1,0 +1,22 @@
+# --- Data: never commit the Kaggle CSV (about 150 MB) ---
+data/*.csv
+
+# --- R / RStudio ---
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+
+# --- Quarto render output ---
+/.quarto/
+*_files/
+*.html
+*.pdf
+!figures/*.pdf
+
+# --- Big intermediate results (keep the small summary .rds files) ---
+results/*_raw.rds
+
+# --- OS clutter ---
+.DS_Store
+Thumbs.db

@@ -1,0 +1,39 @@
+---
+title: "Class Imbalance: Can Prediction Be Improved?"
+subtitle: "STAT 447/847, Team 2"
+format:
+  revealjs:
+    slide-number: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+source("R/00_setup.R")
+```
+
+## The problem
+
+99.8% accuracy by predicting "not fraud" for everyone.
+
+## Our question
+
+Do the standard approaches improve **prediction**, or only the **metric**?
+
+## Simulation design
+
+## Approach A: resampling
+
+## Approach B: class weights
+
+## Approach C: threshold
+
+## Results: simulation
+
+## Results: real data
+
+## STAT 847: EasyEnsemble
+
+## Conclusions
