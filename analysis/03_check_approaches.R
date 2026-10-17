@@ -40,7 +40,7 @@ check.rows <- c(
   which(design$prev == 0.01 & design$n == 1000  & design$sep.level == "high" & design$rep.id == 1),
   which(design$prev == 0.05 & design$n == 20000 & design$sep.level == "high" & design$rep.id == 1)
 )
-built <- c("baseline", "oversample", "undersample", "smote", "weights")
+built <- APPROACHES   # all six
 
 out <- NULL
 for (r in check.rows) {
@@ -59,6 +59,7 @@ for (r in check.rows) {
         auc        = round(auc(res$prob, test$y), 3),
         sens       = round(sens(res$prob, test$y, res$cutoff), 3),
         spec       = round(spec(res$prob, test$y, res$cutoff), 3),
+        cutoff     = round(res$cutoff, 3),
         mean.prob  = round(mean(res$prob), 3),
         seconds    = round(secs, 1)))
     }

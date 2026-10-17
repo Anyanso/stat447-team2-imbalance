@@ -58,7 +58,8 @@ fit_logistic <- function(train, weights = NULL) {
   if (is.null(weights)) weights <- rep(1, nrow(train))
   cv.glmnet(x, train$y, family = "binomial", alpha = 1,
             weights = weights,
-            foldid = stratified_folds(train$y, k = 10))
+            foldid = stratified_folds(train$y, k = 10),
+            keep = TRUE)   # keep each row's out-of-fold prediction (used by Approach C)
 }
 
 # ---- Classifier 2: random forest --------------------------------
@@ -151,6 +152,53 @@ positive_weight <- function(y) {
 }
 
 # =============================================================
+# APPROACH C: THRESHOLD ADJUSTMENT  (Person 3)
+# Leave the model alone; only move the cutoff away from 0.5.
+# Lecture 6: "Nothing forces 0.5" -- a cutoff t encodes a cost ratio
+# (1 - t) / t.
+#
+# The cutoff must be chosen WITHOUT the test set (Lecture 9 rule).
+# We choose it on predictions for TRAINING rows that the model did not
+# use for that row -- so they behave like new data:
+#   logistic: out-of-fold predictions from the 10-fold CV that already
+#             chose lambda (cv.glmnet keep = TRUE) -- the CV idea, Ch. 5
+#   forest:   out-of-bag (OOB) votes -- each tree skips about 1/3 of
+#             the rows, ISLR 8.2.1, p. 342
+# Both are free: no extra models are fitted.
+# =============================================================
+
+# ---- C1. Honest "unseen" probabilities for the training rows ----
+out_of_sample_prob <- function(model) {
+  if (inherits(model, "cv.glmnet")) {
+    eta <- model$fit.preval[, which(model$lambda == model$lambda.min)]  # log-odds
+    exp(eta) / (1 + exp(eta))                                          # ISLR p. 316
+  } else {
+    model$votes[, "1"]                                                 # OOB vote share
+  }
+}
+
+# ---- C2. Choose the cutoff that maximizes a criterion ----
+# ROCR (ISLR 9.6.3, p. 394) computes sensitivity and specificity at
+# EVERY possible cutoff in one call.
+#   "youden": sensitivity + specificity - 1  (same as maximizing
+#             balanced accuracy -- treats both classes equally)
+#   "f1"    : F1 score (focuses on the positive class and precision)
+choose_cutoff <- function(prob, y, criterion = CUTOFF_CRITERION) {
+  ok <- !is.na(prob)                              # rows never out-of-bag (rare)
+  pred <- prediction(prob[ok], y[ok])
+  if (criterion == "youden") {
+    perf  <- performance(pred, "sens", "spec")
+    score <- perf@y.values[[1]] + perf@x.values[[1]] - 1
+  } else {
+    perf  <- performance(pred, "f")
+    score <- perf@y.values[[1]]
+  }
+  cuts <- perf@alpha.values[[1]]
+  keep <- is.finite(cuts) & !is.na(score)         # drop ROCR's "Inf" start point
+  cuts[keep][which.max(score[keep])]
+}
+
+# =============================================================
 # THE APPROACHES
 # =============================================================
 fit_and_predict <- function(train, test, approach, classifier) {
@@ -182,6 +230,13 @@ fit_and_predict <- function(train, test, approach, classifier) {
       model <- fit_forest(train, classwt = c("0" = 1, "1" = w))
     }
     return(list(prob = predict_prob(model, test), cutoff = 0.5))
+  }
+
+  if (approach == "threshold") {
+    # Approach C: the SAME model as the baseline; only the cutoff moves.
+    model  <- fit_classifier(train, classifier)
+    cutoff <- choose_cutoff(out_of_sample_prob(model), train$y)
+    return(list(prob = predict_prob(model, test), cutoff = cutoff))
   }
 
   stop("approach '", approach, "' not built yet")
