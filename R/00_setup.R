@@ -31,6 +31,7 @@ N_TEST      <- 20000                       # fresh, large test set per replicate
 APPROACHES  <- c("baseline", "oversample", "undersample", "smote",
                  "weights", "threshold")
 CLASSIFIERS <- c("logistic", "forest")
+N_TREES     <- 200                         # trees per random forest (see Step 3 timing)
 
 # ---- Plot theme ----
 theme_set(theme_minimal(base_size = 11) +
