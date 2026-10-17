@@ -40,6 +40,7 @@ theme_set(theme_minimal(base_size = 11) +
 
 # ---- Load the project's own functions (each person's file) ----
 for (f in c("R/gen_data.R", "R/design.R", "R/approaches.R", "R/evaluate.R",
+            "R/run_one.R",
             "R/ensemble.R")) {
   if (file.exists(f)) source(f)
 }
