@@ -40,7 +40,7 @@ check.rows <- c(
   which(design$prev == 0.01 & design$n == 1000  & design$sep.level == "high" & design$rep.id == 1),
   which(design$prev == 0.05 & design$n == 20000 & design$sep.level == "high" & design$rep.id == 1)
 )
-built <- c("baseline", "oversample", "undersample", "smote")
+built <- c("baseline", "oversample", "undersample", "smote", "weights")
 
 out <- NULL
 for (r in check.rows) {
