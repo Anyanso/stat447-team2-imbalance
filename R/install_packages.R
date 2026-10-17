@@ -2,12 +2,11 @@
 # install_packages.R  --  run ONCE per computer (Lecture 2: install vs load)
 # =============================================================
 pkgs <- c(
-  "tidyverse",  # data wrangling + ggplot2 (course standard)
-  "MASS",       # mvrnorm(): correlated normal predictors for the simulation
-  "glmnet",     # penalized logistic regression (Lecture 11)
-  "ranger",     # fast random forest
-  "pROC",       # ROC curve and ROC-AUC (Lecture 6)
-  "FNN"         # nearest neighbours, used by our own SMOTE helper
+  "tidyverse",     # class notes: design grid, summaries, ggplot figures
+  "glmnet",        # ISLR 6.5.2 lab: penalized logistic regression
+  "randomForest",  # ISLR 8.3.3 lab: random forests
+  "ROCR",          # ISLR 9.6.3 lab: ROC curves and AUC
+  "FNN"            # nearest neighbours, used by our own SMOTE helper
 )
 
 missing <- setdiff(pkgs, rownames(installed.packages()))
