@@ -1,0 +1,68 @@
+---
+title: "Class Imbalance: Can Prediction Be Improved?"
+subtitle: "STAT 447/847 Course Project, Team 2"
+author:
+  - "Person 1"
+  - "Person 2"
+  - "Person 3"
+date: today
+format:
+  pdf:
+    fontsize: 11pt
+    geometry: margin=1in
+    number-sections: true
+    toc: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+source("R/00_setup.R")
+```
+
+# Introduction {#sec-intro}
+
+<!-- Shared. When positives are rare, accuracy is misleading. Our question:
+     do the standard approaches improve prediction, or only the metric? -->
+
+# Methods {#sec-methods}
+
+## Simulation design
+
+<!-- Person 1: the logistic model, beta0 via uniroot, design grid, seed 447. -->
+
+## The three approaches
+
+<!-- A. Resampling (Person 1), B. Class weights (Person 2),
+     C. Threshold (Person 3). Both classifiers. Training-only rules. -->
+
+## Evaluation
+
+<!-- Person 3: the seven metrics, the Bayes benchmark, MCSE. -->
+
+# Simulation results {#sec-sim}
+
+```{r}
+#| label: sim-results
+# sim <- readRDS("results/sim_summary.rds")
+```
+
+# Real data: credit card fraud {#sec-real}
+
+<!-- Person 2 -->
+
+# Reconciling simulation and real data {#sec-reconcile}
+
+# STAT 847 extension: EasyEnsemble {#sec-ensemble}
+
+<!-- Person 3 -->
+
+# Conclusion {#sec-conclusion}
+
+# References {.unnumbered}
+
+James, G., Witten, D., Hastie, T., Tibshirani, R. (2021). *An Introduction to
+Statistical Learning with Applications in R* (2nd ed.). Springer.
