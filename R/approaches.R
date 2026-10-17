@@ -87,6 +87,58 @@ fit_classifier <- function(train, classifier) {
 }
 
 # =============================================================
+# APPROACH A: RESAMPLING  (Person 1)
+# Change the TRAINING data so the classes are balanced 50 : 50.
+# The model and the 0.5 cutoff stay the same. The test set is untouched.
+# =============================================================
+
+# ---- A1. Over-sampling: copy minority rows until the classes match ----
+# Drawing WITH replacement, as in the bootstrap lab:
+#   ISLR p. 216:  sample(100, 100, replace = T)
+oversample <- function(train) {
+  pos <- which(train$y == "1")
+  neg <- which(train$y == "0")
+  extra <- sample(pos, length(neg) - length(pos), replace = TRUE)
+  train[c(neg, pos, extra), ]
+}
+
+# ---- A2. Under-sampling: throw away majority rows until the classes match ----
+# Drawing WITHOUT replacement: keep a random subset of the negatives.
+undersample <- function(train) {
+  pos <- which(train$y == "1")
+  neg <- which(train$y == "0")
+  keep <- sample(neg, length(pos))
+  train[c(keep, pos), ]
+}
+
+# ---- A3. SMOTE: create NEW minority rows between real ones ----
+# Chawla et al. (2002). For each synthetic row:
+#   1. pick a random minority row  a
+#   2. pick one of its k nearest minority neighbours  b
+#   3. new row = a + u * (b - a),  u ~ Uniform(0, 1)
+#      i.e. a random point on the line segment from a to b.
+# Nearest neighbours come from FNN::get.knn (same idea as knn(), ISLR p. 181).
+smote <- function(train, k = 5) {
+  preds <- predictor_names(train)
+  pos.x <- as.matrix(train[train$y == "1", preds])
+  n.pos <- nrow(pos.x)
+  n.new <- sum(train$y == "0") - n.pos
+  if (n.new <= 0 || n.pos < 2) return(train)    # already balanced / can't interpolate
+
+  k  <- min(k, n.pos - 1)                       # can't have more neighbours than rows
+  nn <- get.knn(pos.x, k = k)$nn.index          # row i: its k nearest minority rows
+
+  a <- sample(1:n.pos, n.new, replace = TRUE)               # step 1
+  b <- nn[cbind(a, sample(1:k, n.new, replace = TRUE))]     # step 2
+  u <- runif(n.new)                                         # step 3
+  new.x <- pos.x[a, , drop = FALSE] + u * (pos.x[b, , drop = FALSE] - pos.x[a, , drop = FALSE])
+
+  new.rows <- data.frame(new.x, y = factor("1", levels = c("0", "1")))
+  if ("p.true" %in% names(train)) new.rows$p.true <- NA     # synthetic: no true p
+  rbind(train, new.rows[, names(train)])
+}
+
+# =============================================================
 # THE APPROACHES
 # =============================================================
 fit_and_predict <- function(train, test, approach, classifier) {
@@ -94,6 +146,16 @@ fit_and_predict <- function(train, test, approach, classifier) {
   if (approach == "baseline") {
     # Nothing changed: fit as usual, classify at the usual 0.5 cutoff.
     model <- fit_classifier(train, classifier)
+    return(list(prob = predict_prob(model, test), cutoff = 0.5))
+  }
+
+  if (approach %in% c("oversample", "undersample", "smote")) {
+    # Approach A: rebalance the TRAINING data only, then fit as usual.
+    new.train <- switch(approach,
+                        oversample  = oversample(train),
+                        undersample = undersample(train),
+                        smote       = smote(train))
+    model <- fit_classifier(new.train, classifier)
     return(list(prob = predict_prob(model, test), cutoff = 0.5))
   }
 
