@@ -20,3 +20,8 @@ results/*_raw.rds
 # --- OS clutter ---
 .DS_Store
 Thumbs.db
+
+# --- Simulation chunks (intermediate; the combined sim_results.rds is kept) ---
+results/sim_chunks/
+results/pilot_chunks/
+results/pilot_results.rds
