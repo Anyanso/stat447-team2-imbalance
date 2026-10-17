@@ -37,6 +37,7 @@ theme_set(theme_minimal(base_size = 11) +
             theme(plot.background = element_rect(fill = "white", colour = NA)))
 
 # ---- Load the project's own functions (each person's file) ----
-for (f in c("R/gen_data.R", "R/approaches.R", "R/evaluate.R", "R/ensemble.R")) {
+for (f in c("R/gen_data.R", "R/design.R", "R/approaches.R", "R/evaluate.R",
+            "R/ensemble.R")) {
   if (file.exists(f)) source(f)
 }
