@@ -139,6 +139,18 @@ smote <- function(train, k = 5) {
 }
 
 # =============================================================
+# APPROACH B: CLASS WEIGHTS  (Person 2)
+# Keep the data as it is, but make each positive COUNT more.
+# Weight = (number of negatives) / (number of positives), so both
+# classes carry the same total weight -- "balanced" weights.
+# Lecture 6: a weight ratio is a cost ratio -- "missing one positive
+# costs w times as much as one false alarm."
+# =============================================================
+positive_weight <- function(y) {
+  sum(y == "0") / sum(y == "1")
+}
+
+# =============================================================
 # THE APPROACHES
 # =============================================================
 fit_and_predict <- function(train, test, approach, classifier) {
@@ -156,6 +168,19 @@ fit_and_predict <- function(train, test, approach, classifier) {
                         undersample = undersample(train),
                         smote       = smote(train))
     model <- fit_classifier(new.train, classifier)
+    return(list(prob = predict_prob(model, test), cutoff = 0.5))
+  }
+
+  if (approach == "weights") {
+    # Approach B: same data, but every positive counts w times.
+    w <- positive_weight(train$y)
+    if (classifier == "logistic") {
+      # glmnet: one weight per ROW in the log-likelihood
+      model <- fit_logistic(train, weights = ifelse(train$y == "1", w, 1))
+    } else {
+      # randomForest: one weight per CLASS (classwt), in level order "0", "1"
+      model <- fit_forest(train, classwt = c("0" = 1, "1" = w))
+    }
     return(list(prob = predict_prob(model, test), cutoff = 0.5))
   }
 
