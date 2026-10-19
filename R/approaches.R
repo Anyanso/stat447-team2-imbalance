@@ -93,23 +93,32 @@ fit_classifier <- function(train, classifier) {
 # The model and the 0.5 cutoff stay the same. The test set is untouched.
 # =============================================================
 
+# ---- Which class is the minority in THIS training set? ----
+# Usually "1", but at 50% prevalence either class can come out smaller
+# by chance, so we always look at the actual counts.
+# We index as idx[sample(length(idx), ...)] rather than sample(idx, ...):
+# if idx were a single number k, sample(k, ...) would draw from 1:k (an R trap).
+class_rows <- function(y) {
+  pos <- which(y == "1")
+  neg <- which(y == "0")
+  if (length(pos) <= length(neg)) list(min = pos, maj = neg) else list(min = neg, maj = pos)
+}
+
 # ---- A1. Over-sampling: copy minority rows until the classes match ----
 # Drawing WITH replacement, as in the bootstrap lab:
 #   ISLR p. 216:  sample(100, 100, replace = T)
 oversample <- function(train) {
-  pos <- which(train$y == "1")
-  neg <- which(train$y == "0")
-  extra <- sample(pos, length(neg) - length(pos), replace = TRUE)
-  train[c(neg, pos, extra), ]
+  cr <- class_rows(train$y)
+  extra <- cr$min[sample(length(cr$min), length(cr$maj) - length(cr$min), replace = TRUE)]
+  train[c(cr$maj, cr$min, extra), ]
 }
 
 # ---- A2. Under-sampling: throw away majority rows until the classes match ----
-# Drawing WITHOUT replacement: keep a random subset of the negatives.
+# Drawing WITHOUT replacement: keep a random subset of the majority class.
 undersample <- function(train) {
-  pos <- which(train$y == "1")
-  neg <- which(train$y == "0")
-  keep <- sample(neg, length(pos))
-  train[c(keep, pos), ]
+  cr <- class_rows(train$y)
+  keep <- cr$maj[sample(length(cr$maj), length(cr$min))]
+  train[c(keep, cr$min), ]
 }
 
 # ---- A3. SMOTE: create NEW minority rows between real ones ----
@@ -121,9 +130,11 @@ undersample <- function(train) {
 # Nearest neighbours come from FNN::get.knn (same idea as knn(), ISLR p. 181).
 smote <- function(train, k = 5) {
   preds <- predictor_names(train)
-  pos.x <- as.matrix(train[train$y == "1", preds])
+  cr    <- class_rows(train$y)
+  min.class <- as.character(train$y[cr$min[1]])           # "1" except, by chance, at 50%
+  pos.x <- as.matrix(train[cr$min, preds])                # minority rows
   n.pos <- nrow(pos.x)
-  n.new <- sum(train$y == "0") - n.pos
+  n.new <- length(cr$maj) - n.pos
   if (n.new <= 0 || n.pos < 2) return(train)    # already balanced / can't interpolate
 
   k  <- min(k, n.pos - 1)                       # can't have more neighbours than rows
@@ -134,7 +145,7 @@ smote <- function(train, k = 5) {
   u <- runif(n.new)                                         # step 3
   new.x <- pos.x[a, , drop = FALSE] + u * (pos.x[b, , drop = FALSE] - pos.x[a, , drop = FALSE])
 
-  new.rows <- data.frame(new.x, y = factor("1", levels = c("0", "1")))
+  new.rows <- data.frame(new.x, y = factor(min.class, levels = c("0", "1")))
   if ("p.true" %in% names(train)) new.rows$p.true <- NA     # synthetic: no true p
   rbind(train, new.rows[, names(train)])
 }
