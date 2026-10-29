@@ -56,18 +56,35 @@ stratified_folds <- function(y, k = 10) {
 fit_logistic <- function(train, weights = NULL) {
   x <- make_x(train)
   if (is.null(weights)) weights <- rep(1, nrow(train))
-  cv.glmnet(x, train$y, family = "binomial", alpha = 1,
-            weights = weights,
-            foldid = stratified_folds(train$y, k = 10),
-            keep = TRUE)   # keep each row's out-of-fold prediction (used by Approach C)
+  # LASSO_MIN_RATIO / LASSO_NLAMBDA (00_setup.R): NULL = glmnet's default
+  # lambda path (the simulation). On the real fraud data the default path
+  # fails to converge -- glmnet gets stuck stepping from the largest lambda
+  # to the next one -- so there we use a shorter, finer path:
+  # 200 values down to 1e-3 x the largest lambda.
+  args <- list(x, train$y, family = "binomial", alpha = 1,
+               weights = weights,
+               foldid = stratified_folds(train$y, k = 10),
+               keep = TRUE)   # keep each row's out-of-fold prediction (used by Approach C)
+  if (!is.null(LASSO_MIN_RATIO)) args$lambda.min.ratio <- LASSO_MIN_RATIO
+  if (!is.null(LASSO_NLAMBDA))   args$nlambda          <- LASSO_NLAMBDA
+  do.call(cv.glmnet, args)
 }
 
 # ---- Classifier 2: random forest --------------------------------
 # ISLR 8.3.3 lab, p. 358:  randomForest(medv ~ ., data = Boston, mtry = 6)
 # For classification the default mtry is sqrt(p) (p. 358), here 2 of 5.
+# FOREST_SAMPSIZE (set in 00_setup.R): NULL = each tree uses a bootstrap
+# sample of ALL training rows (the simulation). For the large real data
+# set it is a number, e.g. 20000: each tree draws that many rows at random
+# from all training rows -- faster, and the class balance is unchanged.
 fit_forest <- function(train, classwt = NULL, ntree = N_TREES) {
-  randomForest(y ~ ., data = train[, c(predictor_names(train), "y")],
-               ntree = ntree, classwt = classwt)
+  if (is.null(FOREST_SAMPSIZE) || nrow(train) <= FOREST_SAMPSIZE) {
+    randomForest(y ~ ., data = train[, c(predictor_names(train), "y")],
+                 ntree = ntree, classwt = classwt)
+  } else {
+    randomForest(y ~ ., data = train[, c(predictor_names(train), "y")],
+                 ntree = ntree, classwt = classwt, sampsize = FOREST_SAMPSIZE)
+  }
 }
 
 # ---- Predicted probabilities on new data ------------------------

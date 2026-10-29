@@ -33,6 +33,10 @@ APPROACHES  <- c("baseline", "oversample", "undersample", "smote",
 CLASSIFIERS <- c("logistic", "forest")
 N_TREES     <- 200                         # trees per random forest (see Step 3 timing)
 CUTOFF_CRITERION <- "youden"                # Approach C: "youden" or "f1"
+FOREST_SAMPSIZE  <- NULL                    # rows per tree; NULL = all (real data sets its own)
+LASSO_MIN_RATIO  <- NULL                    # lasso lambda range; NULL = glmnet default (real data sets its own)
+LASSO_NLAMBDA    <- NULL                    # number of lambdas; NULL = glmnet default (100)
+N_SPLITS         <- 10                      # real data: repeated train/test splits
 
 # ---- Plot theme ----
 theme_set(theme_minimal(base_size = 11) +
@@ -40,7 +44,7 @@ theme_set(theme_minimal(base_size = 11) +
 
 # ---- Load the project's own functions (each person's file) ----
 for (f in c("R/gen_data.R", "R/design.R", "R/approaches.R", "R/evaluate.R",
-            "R/run_one.R",
+            "R/run_one.R", "R/real_data.R",
             "R/ensemble.R")) {
   if (file.exists(f)) source(f)
 }

@@ -25,3 +25,6 @@ Thumbs.db
 results/sim_chunks/
 results/pilot_chunks/
 results/pilot_results.rds
+results/real_chunks/
+results/real_pilot_chunks/
+results/real_pilot_results.rds
