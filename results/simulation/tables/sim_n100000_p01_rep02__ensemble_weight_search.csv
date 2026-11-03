@@ -1,0 +1,10 @@
+Logistic_Weight,RF_Weight,CV_AP,Experiment,Selected_Weight,Selected_Logistic,Selected_Forest
+0.1,0.9,0.131954079541935,sim_n100000_p01_rep02,0.9,Penalized_Logistic__undersample,Random_Forest__weighted
+0.2,0.8,0.138735555098366,sim_n100000_p01_rep02,0.9,Penalized_Logistic__undersample,Random_Forest__weighted
+0.3,0.7,0.142953060752339,sim_n100000_p01_rep02,0.9,Penalized_Logistic__undersample,Random_Forest__weighted
+0.4,0.6,0.145897172391357,sim_n100000_p01_rep02,0.9,Penalized_Logistic__undersample,Random_Forest__weighted
+0.5,0.5,0.148373102103978,sim_n100000_p01_rep02,0.9,Penalized_Logistic__undersample,Random_Forest__weighted
+0.6,0.4,0.150698475999592,sim_n100000_p01_rep02,0.9,Penalized_Logistic__undersample,Random_Forest__weighted
+0.7,0.3,0.152114657480267,sim_n100000_p01_rep02,0.9,Penalized_Logistic__undersample,Random_Forest__weighted
+0.8,0.2,0.153856340694029,sim_n100000_p01_rep02,0.9,Penalized_Logistic__undersample,Random_Forest__weighted
+0.9,0.1,0.155046624295849,sim_n100000_p01_rep02,0.9,Penalized_Logistic__undersample,Random_Forest__weighted
