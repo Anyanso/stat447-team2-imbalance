@@ -28,3 +28,5 @@ results/pilot_results.rds
 results/real_chunks/
 results/real_pilot_chunks/
 results/real_pilot_results.rds
+results/ens_sim_chunks/
+results/ens_real_chunks/
