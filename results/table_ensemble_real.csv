@@ -1,0 +1,7 @@
+"metric","classifier","best.approach","ensemble","best.single","change"
+"roc.auc","logistic","oversample",0.979,0.979,"+0.001 (0.001)"
+"roc.auc","forest","smote",0.978,0.983,"-0.005 (0.002)"
+"pr.auc","logistic","threshold",0.682,0.765,"-0.083 (0.014)"
+"pr.auc","forest","smote",0.743,0.828,"-0.085 (0.005)"
+"bal.accuracy","logistic","smote",0.938,0.941,"-0.003 (0.002)"
+"bal.accuracy","forest","undersample",0.937,0.935,"+0.002 (0.002)"

@@ -37,6 +37,7 @@ FOREST_SAMPSIZE  <- NULL                    # rows per tree; NULL = all (real da
 LASSO_MIN_RATIO  <- NULL                    # lasso lambda range; NULL = glmnet default (real data sets its own)
 LASSO_NLAMBDA    <- NULL                    # number of lambdas; NULL = glmnet default (100)
 N_SPLITS         <- 10                      # real data: repeated train/test splits
+ENSEMBLE_B       <- 10                      # Step 9: members in the EasyEnsemble
 
 # ---- Plot theme ----
 theme_set(theme_minimal(base_size = 11) +
