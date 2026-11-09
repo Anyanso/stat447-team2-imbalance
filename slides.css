@@ -1,0 +1,12 @@
+/* Team 2 slides: a few readable defaults on top of the Quarto revealjs theme */
+.reveal { font-size: 30px; }
+.reveal h2 { font-size: 1.45em; color: #1F4E79; }
+.reveal h3 { font-size: 1.05em; color: #1F4E79; margin-bottom: 0.2em; }
+.reveal table { font-size: 0.78em; }
+.reveal .columns { gap: 1.2em; }
+.reveal img { max-height: 600px; }
+.big-number { font-size: 4.2em; font-weight: 700; color: #b83c1c; text-align: center; line-height: 1.1; }
+.center-text { text-align: center; }
+.reveal .footer { font-size: 0.45em; color: #6b6b6b; }
+.formula { font-size: 0.82em; background: #f3f6fa; border-left: 4px solid #1F4E79; padding: 0.4em 0.6em; margin-bottom: 0.6em; }
+.small-caption { font-size: 0.5em; color: #555; text-align: center; margin-top: -0.4em; }

@@ -19,8 +19,8 @@ set.seed(SEED)
 
 # ---- Paths (relative to the project root, so they work on every laptop) ----
 DATA_PATH    <- "data/creditcard.csv"
-RESULTS_DIR  <- "results"
-FIGURES_DIR  <- "figures"
+RESULTS_DIR  <- if (exists("RESULTS_DIR_OVERRIDE")) RESULTS_DIR_OVERRIDE else "results"
+FIGURES_DIR  <- if (exists("FIGURES_DIR_OVERRIDE")) FIGURES_DIR_OVERRIDE else "figures"
 
 # ---- Study settings: set ONCE here, never scattered in the code ----
 PREVALENCES <- c(0.50, 0.20, 0.05, 0.01)   # minority-class rate (handout)
@@ -40,8 +40,14 @@ N_SPLITS         <- 10                      # real data: repeated train/test spl
 ENSEMBLE_B       <- 10                      # Step 9: members in the EasyEnsemble
 
 # ---- Plot theme ----
-theme_set(theme_minimal(base_size = 11) +
+# SLIDE_MODE (set before sourcing, by analysis/10_slide_figures.R): bigger text,
+# and no in-figure titles, because the slide title does that job.
+PLOT_BASE_SIZE <- if (exists("SLIDE_MODE") && SLIDE_MODE) 17 else 11
+theme_set(theme_minimal(base_size = PLOT_BASE_SIZE) +
             theme(plot.background = element_rect(fill = "white", colour = NA)))
+if (exists("SLIDE_MODE") && SLIDE_MODE) {
+  theme_update(plot.title = element_blank(), plot.subtitle = element_blank())
+}
 
 # ---- Load the project's own functions (each person's file) ----
 for (f in c("R/gen_data.R", "R/design.R", "R/approaches.R", "R/evaluate.R",
