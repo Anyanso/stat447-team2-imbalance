@@ -16,10 +16,10 @@ class weights, threshold adjustment) improve *prediction*, or only the *metric*?
 | Folder / file | What goes there |
 |---|---|
 | `R/00_setup.R` | packages, seed (447), paths, study settings. Source it everywhere. |
-| `R/gen_data.R` | simulation generator (Person 1) |
+| `R/gen_data.R` | simulation generator (John Anyanso) |
 | `R/approaches.R` | the three approaches + two classifiers (all three people) |
-| `R/evaluate.R` | the metric function and Bayes benchmark (Person 3) |
-| `R/ensemble.R` | EasyEnsemble, STAT 847 extension (Person 3) |
+| `R/evaluate.R` | the metric function and Bayes benchmark (Wadud Ambali) |
+| `R/ensemble.R` | EasyEnsemble, STAT 847 extension (Wadud Ambali) |
 | `analysis/` | scripts that run things and save results |
 | `results/` | saved `.rds` results, so the report never reruns the simulation |
 | `figures/` | saved plots |
