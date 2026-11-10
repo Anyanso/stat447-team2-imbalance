@@ -1,5 +1,5 @@
 # --- Data: never commit the Kaggle CSV (about 150 MB) ---
-# data/*.csv
+data/*.csv
 
 # --- R / RStudio ---
 .Rhistory
