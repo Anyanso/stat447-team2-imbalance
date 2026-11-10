@@ -1,15 +1,12 @@
-# =============================================================
-# 04_check_evaluate.R  --  Step 4: is the grading function right?
-# =============================================================
+# 04_check_evaluate.R
+# Checks evaluate() against the textbook and runs it on one replicate.
 source("R/00_setup.R")
 
-# ---- Check 1: reproduce the textbook's numbers ----
-# ISLR Table 4.4 (p. 148), LDA on the Default data:
+# ISLR Table 4.4 (LDA on the Default data):
 #                 True No   True Yes
 #   Predicted No    9644       252
 #   Predicted Yes     23        81
-# Textbook / Lecture 6 values: sensitivity 81/333 = 0.243,
-# specificity 9644/9667 = 0.998, precision 81/104 = 0.779, error 2.75%.
+# sensitivity 81/333, specificity 9644/9667, precision 81/104, error 2.75%
 y    <- factor(c(rep("0", 9644), rep("1", 252), rep("0", 23), rep("1", 81)),
                levels = c("0", "1"))
 prob <- c(rep(0.1, 9644 + 252), rep(0.9, 23 + 81))   # flagged rows get 0.9
@@ -23,8 +20,7 @@ stopifnot(abs(m$sensitivity - 81/333) < 1e-9,
           abs(1 - m$accuracy - 0.0275) < 1e-9)
 cat("matches the textbook\n\n")
 
-# ---- Check 2: the useless "always say not fraud" classifier ----
-# Handout: "a model predicting negative for everyone scores 99% accuracy".
+# the "always not fraud" classifier from the handout
 y2 <- factor(c(rep("0", 990), rep("1", 10)), levels = c("0", "1"))
 m2 <- evaluate(y2, rep(0, 1000))
 cat("Check 2: always predict 'not fraud' (1% positives)\n")
@@ -32,7 +28,7 @@ print(m2[, c("accuracy", "sensitivity", "precision", "f1", "bal.accuracy", "roc.
       row.names = FALSE)
 cat("\n")
 
-# ---- Check 3: grade one replicate, every approach + the Bayes benchmark ----
+# one replicate, all approaches plus the Bayes benchmark
 design <- readRDS(file.path(RESULTS_DIR, "design.rds"))
 row <- design[design$prev == 0.05 & design$n == 1000 &
               design$sep.level == "high" & design$rep.id == 1, ]

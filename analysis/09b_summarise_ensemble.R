@@ -1,22 +1,16 @@
-# =============================================================
-# 09b_summarise_ensemble.R  --  Step 9 (STAT 847): does EasyEnsemble beat
-# the best single approach, and at which imbalance ratios?
-# Input : results/sim_results.rds, results/ens_sim_results.rds (simulation)
-#         results/real_results.rds, results/ens_real_results.rds (real data)
-# Output: results/table_ensemble_sim.csv, results/table_ensemble_real.csv,
-#         figures/fig7_ensemble_vs_best.png
-# =============================================================
+# 09b_summarise_ensemble.R
+# Does EasyEnsemble beat the best single approach, and at which
+# prevalences? Tables for simulation and real data, and Figure 7.
 source("R/00_setup.R")
 source("R/summarise.R")
 sim <- readRDS(file.path(RESULTS_DIR, "sim_results.rds"))
 ens <- readRDS(file.path(RESULTS_DIR, "ens_sim_results.rds"))
-cat("Ensemble replicates available:", nrow(unique(ens[, c("setting", "rep.id")])), "of 1600\n\n")
+cat("Ensemble replicates available:", nrow(unique(ens[, c("setting", "rep.id")])), "of",
+    nrow(unique(sim[, c("setting", "rep.id")])), "\n\n")
 
-# ---- Block A: who is the "best single approach"? ----
-# For each setting x classifier, the approach (of the 6) with the highest
-# MEAN of the metric over its 100 replicates. Note this choice is made
-# AFTER seeing the results, which flatters the single approaches a little --
-# so it is a tough benchmark for the ensemble.
+# Best single approach = the one with the highest mean in that setting.
+# It is picked after seeing the results, which makes it a tough benchmark
+# for the ensemble.
 best_single <- function(metric) {
   m <- sim[sim$approach != "bayes", ] |>
     group_by(prev, n, sep.level, classifier, approach) |>
@@ -27,9 +21,8 @@ best_single <- function(metric) {
   m[, c("prev", "n", "sep.level", "classifier", "approach")]
 }
 
-# ---- Block B: PAIRED difference, ensemble minus best single approach ----
-# Same replicate, same data -> replicate-by-replicate difference, then mean
-# and MCSE (deck S.6). Positive = the ensemble wins.
+# ensemble minus best single approach, paired by replicate
+# (positive = ensemble better)
 vs_best <- function(metric) {
   best <- best_single(metric)
   b <- merge(sim, best, by = c("prev", "n", "sep.level", "classifier", "approach"))
@@ -44,8 +37,7 @@ vs_best <- function(metric) {
               mcse = sd(diff, na.rm = TRUE) / sqrt(sum(!is.na(diff))),
               B = n(), .groups = "drop") |>
     mutate(metric = metric,
-           # A difference must be both CLEAR (beyond 2 MCSE, deck Mistake 2)
-           # and LARGE ENOUGH TO MATTER (at least 0.005) to count.
+           # counts only if beyond 2 MCSE and at least 0.005
            verdict = ifelse(abs(mean) < 0.005, "negligible (< 0.005)",
                      ifelse(mean - 2 * mcse > 0, "ensemble better",
                      ifelse(mean + 2 * mcse < 0, "best single better", "no clear difference"))))
@@ -58,10 +50,10 @@ out <- res |>
 write.csv(out, file.path(RESULTS_DIR, "table_ensemble_sim.csv"), row.names = FALSE)
 
 cat("How often the ensemble beats / ties / loses to the best single approach\n")
-cat("(16 settings x 2 classifiers per metric; counted only if beyond 2 MCSE and >= 0.005)\n")
+cat("(", length(unique(sim$setting)), " settings x 2 classifiers per metric; counted only if beyond 2 MCSE and >= 0.005)\n", sep = "")
 print(table(res$metric, res$verdict))
 
-# ---- Block C: Figure 7 -- ensemble minus best single, by prevalence ----
+# Figure 7
 f7 <- res |>
   group_by(prev, n, classifier, metric) |>
   summarise(mean = mean(mean), mcse = sqrt(sum(mcse^2)) / n(), .groups = "drop")
@@ -78,8 +70,8 @@ fig7 <- ggplot(f7, aes(prev.lab, mean, colour = n.lab, shape = n.lab, group = n.
                 linewidth = 0.5, position = position_dodge(width = 0.3)) +
   geom_point(size = 2.2, position = position_dodge(width = 0.3)) +
   facet_grid(classifier ~ metric) +
-  scale_colour_manual(values = c("#2a78d6", "#eb6834")) +
-  scale_shape_manual(values = c(16, 17)) +
+  scale_colour_manual(values = c("#2a78d6", "#eb6834", "#1baf7a")) +
+  scale_shape_manual(values = c(16, 17, 15)) +
   labs(x = "Minority prevalence", y = "EasyEnsemble minus best single approach",
        colour = NULL, shape = NULL,
        title = "EasyEnsemble vs the best single approach in each setting",
@@ -89,7 +81,7 @@ fig7 <- ggplot(f7, aes(prev.lab, mean, colour = n.lab, shape = n.lab, group = n.
 ggsave(file.path(FIGURES_DIR, "fig7_ensemble_vs_best.png"), fig7,
        width = 10, height = 6, dpi = 200, bg = "white")
 
-# ---- Block D: real data, the same comparison over the 10 splits ----
+# real data: same comparison over the 10 splits
 real <- readRDS(file.path(RESULTS_DIR, "real_results.rds"))
 ens.real <- readRDS(file.path(RESULTS_DIR, "ens_real_results.rds"))
 real.out <- NULL

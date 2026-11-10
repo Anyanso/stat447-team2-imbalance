@@ -1,61 +1,41 @@
-# =============================================================
-# evaluate.R  --  OWNER: Nidhi Prajapati   (Step 4)
-# The grading function every approach is scored with.
-# Definitions follow ISLR Tables 4.6-4.7 (pp. 152-153) and Lecture 6.
-# =============================================================
-# CONTRACT
-#   evaluate(y, prob, cutoff = 0.5)
-#     y      : factor c("0","1"), the TRUE classes of the test set
-#     prob   : predicted P(y = 1) for each test row
-#     cutoff : classify as "1" when prob > cutoff
-#   -> one-row data frame of metrics
-# =============================================================
+# evaluate.R -- scoring the predictions (Nidhi Prajapati)
+# evaluate(y, prob, cutoff) returns a one-row data frame of metrics.
+#   y      true classes, factor "0"/"1"
+#   prob   predicted P(y = 1)
+#   cutoff predict "1" when prob > cutoff
+# Definitions as in ISLR Tables 4.6 and 4.7.
 
 evaluate <- function(y, prob, cutoff = 0.5) {
 
-  # ---- Block 1: turn probabilities into classes ----
-  # Same idea as the ISLR Ch. 4 lab, p. 174:
-  #   glm.pred[glm.probs > .5] <- "Up"
   pred <- ifelse(prob > cutoff, "1", "0")
 
-  # ---- Block 2: the confusion matrix, as four counts (ISLR Table 4.6) ----
-  TP <- sum(pred == "1" & y == "1")   # fraud, flagged        (true positive)
-  FN <- sum(pred == "0" & y == "1")   # fraud, missed         (false negative)
-  FP <- sum(pred == "1" & y == "0")   # normal, flagged       (false positive)
-  TN <- sum(pred == "0" & y == "0")   # normal, cleared       (true negative)
+  TP <- sum(pred == "1" & y == "1")   # fraud caught
+  FN <- sum(pred == "0" & y == "1")   # fraud missed
+  FP <- sum(pred == "1" & y == "0")   # false alarm
+  TN <- sum(pred == "0" & y == "0")   # normal, correctly cleared
 
-  # ---- Block 3: the threshold metrics (ISLR Table 4.7) ----
-  sensitivity <- TP / (TP + FN)                 # share of frauds caught (recall)
-  specificity <- TN / (TN + FP)                 # share of normals cleared
-  precision   <- if (TP + FP > 0) TP / (TP + FP) else NA   # of those flagged, share real
+  sensitivity <- TP / (TP + FN)
+  specificity <- TN / (TN + FP)
+  precision   <- if (TP + FP > 0) TP / (TP + FP) else NA   # undefined if nothing is flagged
   f1          <- if (is.na(precision) || precision + sensitivity == 0) 0 else
                    2 * precision * sensitivity / (precision + sensitivity)
   bal.accuracy <- (sensitivity + specificity) / 2
-  accuracy     <- (TP + TN) / length(y)         # reported only to show it misleads
+  accuracy     <- (TP + TN) / length(y)         # kept to show how misleading it is
 
-  # ---- Block 4: the threshold-free metrics (ROCR, ISLR 9.6.3, p. 394) ----
-  # These judge the RANKING of the probabilities over ALL cutoffs at once.
+  # ROC-AUC and PR-AUC look at the ranking over all cutoffs
   rocr   <- prediction(prob, y)
-  roc.auc <- performance(rocr, "auc")@y.values[[1]]    # area under ROC curve
-  pr.auc  <- performance(rocr, "aucpr")@y.values[[1]]  # area under precision-recall curve
+  roc.auc <- performance(rocr, "auc")@y.values[[1]]
+  pr.auc  <- performance(rocr, "aucpr")@y.values[[1]]
 
   data.frame(sensitivity, specificity, precision, f1, bal.accuracy, accuracy,
              roc.auc, pr.auc, cutoff,
              n.flagged = TP + FP)
 }
 
-# -------------------------------------------------------------
-# bayes_benchmark(test, prev): the best ANY method could do
-# -------------------------------------------------------------
-# Uses the TRUE probabilities p.true, which only exist in a simulation.
-# - ROC-AUC and PR-AUC: the true probabilities give the best possible
-#   ranking (no method can beat them on average).
-# - Cutoff = prevalence: for the TRUE probabilities this is the rule that
-#   maximizes sensitivity + specificity (balanced accuracy).  Flag x when
-#   p(x) > prev, i.e. when x is more typical of positives than negatives.
-#   (The ordinary Bayes classifier uses 0.5 and minimizes OVERALL error,
-#   Lecture 5 -- which is exactly the goal we argue is wrong here.)
-# -------------------------------------------------------------
+# Bayes benchmark: score the true probabilities, the best any method can do.
+# The cutoff is the prevalence, which for the true probabilities maximises
+# sensitivity + specificity. (The usual Bayes classifier cuts at 0.5 and
+# minimises overall error, which is the wrong goal here.)
 bayes_benchmark <- function(test, prev) {
   evaluate(test$y, test$p.true, cutoff = prev)
 }

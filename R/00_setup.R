@@ -1,47 +1,44 @@
-# =============================================================
-# 00_setup.R  --  source() this at the top of EVERY script and .qmd
-#   source("R/00_setup.R")
-# =============================================================
+# 00_setup.R
+# Packages, seed, paths and study settings. Every script starts with
+# source("R/00_setup.R").
 
-# ---- Packages (every session) ----
 suppressPackageStartupMessages({
-  library(tidyverse)     # class notes: design grid, summaries, ggplot figures
-  library(glmnet)        # ISLR 6.5.2 lab: ridge / lasso / penalized logistic
-  library(randomForest)  # ISLR 8.3.3 lab: random forests
-  library(ROCR)          # ISLR 9.6.3 lab: ROC curves and AUC
-  library(FNN)           # nearest neighbours for our own SMOTE helper
+  library(tidyverse)     # design grid, summaries, plots
+  library(glmnet)        # lasso logistic regression (ISLR lab 6.5.2)
+  library(randomForest)  # random forests (ISLR lab 8.3.3)
+  library(ROCR)          # ROC and PR curves (ISLR lab 9.6.3)
+  library(FNN)           # nearest neighbours for SMOTE
 })
 
-# ---- Reproducibility (simulation deck, Mistake 1) ----
-# ONE seed for the whole project. Record it in the report.
+# One seed for the whole project, reported in the write-up
 SEED <- 447
 set.seed(SEED)
 
-# ---- Paths (relative to the project root, so they work on every laptop) ----
+# Paths are relative to the project folder, so open the .Rproj first
 DATA_PATH    <- "data/creditcard.csv"
 RESULTS_DIR  <- if (exists("RESULTS_DIR_OVERRIDE")) RESULTS_DIR_OVERRIDE else "results"
 FIGURES_DIR  <- if (exists("FIGURES_DIR_OVERRIDE")) FIGURES_DIR_OVERRIDE else "figures"
 
-# ---- Study settings: set ONCE here, never scattered in the code ----
-PREVALENCES <- c(0.50, 0.20, 0.05, 0.01)   # minority-class rate (handout)
-SAMPLE_SIZES <- c(1000, 20000)             # small count vs. small proportion
+# Study settings -- change them here and nowhere else
+PREVALENCES <- c(0.50, 0.20, 0.05, 0.01)   # share of positives
+SAMPLE_SIZES <- c(1000, 20000, 100000)     # training set sizes
 SEPARATION  <- c(low = 0.5, high = 1.5)    # multiplies the true slopes
 N_REPS      <- 100                         # replicates per setting
-N_TEST      <- 20000                       # fresh, large test set per replicate
+N_TEST      <- 20000                       # size of each fresh test set
 APPROACHES  <- c("baseline", "oversample", "undersample", "smote",
                  "weights", "threshold")
 CLASSIFIERS <- c("logistic", "forest")
-N_TREES     <- 200                         # trees per random forest (see Step 3 timing)
-CUTOFF_CRITERION <- "youden"                # Approach C: "youden" or "f1"
-FOREST_SAMPSIZE  <- NULL                    # rows per tree; NULL = all (real data sets its own)
-LASSO_MIN_RATIO  <- NULL                    # lasso lambda range; NULL = glmnet default (real data sets its own)
-LASSO_NLAMBDA    <- NULL                    # number of lambdas; NULL = glmnet default (100)
-N_SPLITS         <- 10                      # real data: repeated train/test splits
-ENSEMBLE_B       <- 10                      # Step 9: members in the EasyEnsemble
+N_TREES     <- 200                         # trees per forest
+CUTOFF_CRITERION <- "youden"                # how the threshold approach picks its cutoff ("youden" or "f1")
+FOREST_SAMPSIZE  <- NULL                    # rows drawn per tree; NULL = usual bootstrap of all rows
+BIG_N_SAMPSIZE   <- 20000                   # rows per tree for simulated forests at n = 100,000
+LASSO_MIN_RATIO  <- NULL                    # NULL = glmnet's default lambda path
+LASSO_NLAMBDA    <- NULL                    # NULL = glmnet's default (100 lambdas)
+N_SPLITS         <- 10                      # train/test splits of the real data
+ENSEMBLE_B       <- 10                      # members in EasyEnsemble
 
-# ---- Plot theme ----
-# SLIDE_MODE (set before sourcing, by analysis/10_slide_figures.R): bigger text,
-# and no in-figure titles, because the slide title does that job.
+# Plot theme. 10_slide_figures.R sets SLIDE_MODE for bigger text and no
+# titles inside the figures (the slide title is enough).
 PLOT_BASE_SIZE <- if (exists("SLIDE_MODE") && SLIDE_MODE) 17 else 11
 theme_set(theme_minimal(base_size = PLOT_BASE_SIZE) +
             theme(plot.background = element_rect(fill = "white", colour = NA)))
@@ -49,7 +46,7 @@ if (exists("SLIDE_MODE") && SLIDE_MODE) {
   theme_update(plot.title = element_blank(), plot.subtitle = element_blank())
 }
 
-# ---- Load the project's own functions (each person's file) ----
+# Our own functions
 for (f in c("R/gen_data.R", "R/design.R", "R/approaches.R", "R/evaluate.R",
             "R/run_one.R", "R/real_data.R",
             "R/ensemble.R")) {

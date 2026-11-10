@@ -1,23 +1,19 @@
-# =============================================================
-# 07_run_real_data.R  --  Step 7: every approach on the real fraud data
-#
-# HOW TO USE (open the .Rproj first)
-#   1. Leave PILOT <- TRUE and run it: ONE split, prints how long it took.
-#   2. Set PILOT <- FALSE and run again: N_SPLITS (10) splits.
-#      Each split is saved as soon as it finishes; rerun to resume.
-#   3. Upload results/real_results.rds.
-# Needs data/creditcard.csv (from Kaggle; never committed).
-# =============================================================
+# 07_run_real_data.R
+# Runs every approach on the credit card data. Needs data/creditcard.csv.
+#   1. PILOT <- TRUE runs one split and reports how long it took.
+#   2. PILOT <- FALSE runs all N_SPLITS splits, saving each as it
+#      finishes (run again to resume).
+#   3. Then push results/real_results.rds.
 PILOT   <- TRUE
-N_CORES <- max(1, min(3, parallel::detectCores() - 1))  # big data: at most 3 at once (memory)
+N_CORES <- max(1, min(3, parallel::detectCores() - 1))  # at most 3 at once, to save memory
 
 source("R/00_setup.R")
 library(parallel)
-FOREST_SAMPSIZE <- 20000      # rows per tree for the big real data set
-LASSO_MIN_RATIO <- 1e-3       # default lasso path fails to converge on this data,
-LASSO_NLAMBDA   <- 200        # so use a shorter, finer path (Step 7 notes)
+FOREST_SAMPSIZE <- 20000      # rows per tree
+LASSO_MIN_RATIO <- 1e-3       # glmnet's default path doesn't converge here,
+LASSO_NLAMBDA   <- 200        # so use a shorter, finer one
 
-# ---- Block A: which splits still need running? ----
+# which splits still need running?
 splits    <- if (PILOT) 1 else 1:N_SPLITS
 chunk.dir <- file.path(RESULTS_DIR, if (PILOT) "real_pilot_chunks" else "real_chunks")
 dir.create(chunk.dir, showWarnings = FALSE)
@@ -26,14 +22,12 @@ todo <- setdiff(splits, done)
 cat(length(splits), "splits in total;", length(done), "already done;",
     length(todo), "to run on", min(N_CORES, max(1, length(todo))), "cores.\n")
 
-# ---- Block B: run one split and save it straight away ----
 run_and_save <- function(s) {
   res <- run_real_split(s, cc)
   saveRDS(res, file.path(chunk.dir, sprintf("split_%02d.rds", s)))
   s
 }
 
-# ---- Block C: run the splits (in parallel when there is more than one) ----
 start <- Sys.time()
 if (length(todo) == 1) {
   cc <- load_creditcard()
@@ -46,7 +40,7 @@ if (length(todo) == 1) {
     FOREST_SAMPSIZE <- 20000
     LASSO_MIN_RATIO <- 1e-3
     LASSO_NLAMBDA   <- 200
-    cc <- load_creditcard()          # each worker reads the data once
+    cc <- load_creditcard()
     NULL
   })
   clusterExport(cl, c("chunk.dir", "run_and_save"))
@@ -56,14 +50,14 @@ if (length(todo) == 1) {
 mins <- as.numeric(difftime(Sys.time(), start, units = "mins"))
 cat("Finished", length(todo), "split(s) in", round(mins, 1), "minutes.\n")
 
-# ---- Block D: combine and save ----
+# combine and save
 files <- list.files(chunk.dir, full.names = TRUE)
 real <- do.call(rbind, lapply(files, readRDS))
 out.file <- file.path(RESULTS_DIR, if (PILOT) "real_pilot_results.rds" else "real_results.rds")
 saveRDS(real, out.file)
 cat("Splits in results:", length(unique(real$split.id)), "| saved", out.file, "\n")
 
-# ---- Block E: quick look ----
+# quick look
 show <- aggregate(cbind(roc.auc, pr.auc, sensitivity, precision, bal.accuracy, accuracy) ~
                     classifier + approach, data = real, FUN = mean)
 show[, -(1:2)] <- round(show[, -(1:2)], 3)

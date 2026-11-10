@@ -1,31 +1,33 @@
-# =============================================================
-# 09_run_ensemble.R  --  Step 9 (STAT 847): run EasyEnsemble on the
-# SAME simulated data sets (Step 5) and real splits (Step 7).
-# Only the ensemble is run; the other 12 methods' results are reused.
-#
-# HOW TO USE (open the .Rproj first)
-#   PART <- "real" : 10 real splits (minutes; needs data/creditcard.csv)
-#   PART <- "sim"  : all 1,600 simulated replicates (about 2 hours here)
-#   Saved in chunks as it goes; rerun to resume.
-# Output: results/ens_real_results.rds or results/ens_sim_results.rds
-# =============================================================
+# 09_run_ensemble.R
+# Runs EasyEnsemble on the same simulated data sets and real splits as
+# 05 and 07 (the other methods' results are reused, not rerun).
+#   PART <- "real" : the 10 real splits (needs data/creditcard.csv)
+#   PART <- "sim"  : the simulated replicates (settings already in
+#                    results/ens_sim_results.rds are skipped and the new
+#                    ones are added to it)
+# Saved in chunks; run again to resume.
 PART    <- "real"                                   # "real" or "sim"
 if (length(commandArgs(TRUE)) > 0) PART <- commandArgs(TRUE)[1]   # e.g. Rscript ... sim
-N_CORES <- max(1, min(3, parallel::detectCores() - 1))
+N_CORES <- if (PART == "real") max(1, min(3, parallel::detectCores() - 1)) else  # real data: save memory
+             max(1, parallel::detectCores() - 1)
 
 source("R/00_setup.R")
 library(parallel)
-if (PART == "real") {              # same real-data settings as Step 7
+if (PART == "real") {              # same settings as 07_run_real_data.R
   FOREST_SAMPSIZE <- 20000
   LASSO_MIN_RATIO <- 1e-3
   LASSO_NLAMBDA   <- 200
 }
 
-# ---- Block A: the jobs (one per real split, or 25 replicates per chunk) ----
+out.file <- file.path(RESULTS_DIR, paste0("ens_", PART, "_results.rds"))
+
+# jobs: one per real split, or chunks of 25 replicates (10 at n = 100,000)
 if (PART == "sim") {
+  old <- if (file.exists(out.file)) readRDS(out.file) else NULL
   design <- readRDS(file.path(RESULTS_DIR, "design.rds"))
+  design <- design[!design$setting %in% old$setting, ]
   design$chunk <- paste0(gsub("[^0-9a-z]+", "_", design$setting), "_",
-                         sprintf("%03d", ceiling(design$rep.id / 25)))
+                         sprintf("%03d", ceiling(design$rep.id / ifelse(design$n > 20000, 10, 25))))
   jobs <- sort(unique(design$chunk))
 } else {
   jobs <- sprintf("split_%02d", 1:N_SPLITS)
@@ -36,7 +38,6 @@ todo <- setdiff(jobs, sub("\\.rds$", "", list.files(chunk.dir)))
 cat(length(jobs), "jobs;", length(jobs) - length(todo), "already done;",
     length(todo), "to run.\n")
 
-# ---- Block B: run one job and save it straight away ----
 run_job <- function(job) {
   if (PART == "sim") {
     rows <- design[design$chunk == job, ]
@@ -49,21 +50,17 @@ run_job <- function(job) {
   job
 }
 
-# ---- Block C: in parallel (same pattern as Steps 5 and 7) ----
 start <- Sys.time()
 if (length(todo) > 0) {
   cl <- makeCluster(min(N_CORES, length(todo)))
   clusterCall(cl, setwd, getwd())
   clusterExport(cl, c("PART", "chunk.dir", "run_job"))
+  if (PART == "sim") clusterExport(cl, "design")
   clusterEvalQ(cl, {
     suppressMessages(source("R/00_setup.R"))
     if (PART == "real") {
       FOREST_SAMPSIZE <- 20000; LASSO_MIN_RATIO <- 1e-3; LASSO_NLAMBDA <- 200
       cc <- load_creditcard()
-    } else {
-      design <- readRDS(file.path(RESULTS_DIR, "design.rds"))
-      design$chunk <- paste0(gsub("[^0-9a-z]+", "_", design$setting), "_",
-                             sprintf("%03d", ceiling(design$rep.id / 25)))
     }
     NULL
   })
@@ -72,8 +69,8 @@ if (length(todo) > 0) {
 }
 cat("Finished in", round(as.numeric(difftime(Sys.time(), start, units = "mins")), 1), "minutes.\n")
 
-# ---- Block D: combine and save ----
-res <- do.call(rbind, lapply(list.files(chunk.dir, full.names = TRUE), readRDS))
-out.file <- file.path(RESULTS_DIR, paste0("ens_", PART, "_results.rds"))
+# combine and save
+res <- do.call(rbind, lapply(file.path(chunk.dir, paste0(jobs, ".rds")), readRDS))
+if (PART == "sim") res <- rbind(old, res)
 saveRDS(res, out.file)
 cat("Rows:", nrow(res), "| saved", out.file, "\n")

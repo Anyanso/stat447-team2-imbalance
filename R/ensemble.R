@@ -1,53 +1,39 @@
-# =============================================================
-# ensemble.R  --  OWNER: Ambali Wadud (STAT 847 extension, Step 9)
-# EasyEnsemble (Liu, Wu & Zhou, 2009), with our two classifiers.
-# =============================================================
-# The weakness of under-sampling: it throws most majority rows away.
-# EasyEnsemble repeats under-sampling B times with DIFFERENT majority
-# rows, fits a model to each balanced set, and AVERAGES the B predicted
-# probabilities. Each model sees balanced data; together they see most
-# of the majority class. (The original paper boosts within each subset;
-# we use our two classifiers instead, so the comparison stays like-for-like.)
+# ensemble.R -- EasyEnsemble, the STAT 847 extension (Ambali Wadud)
 #
-# CONTRACT
-#   easy_ensemble(train, test, classifier, B = 10)
-#   -> list(prob = averaged P(y = 1) on test, cutoff = 0.5)
-# =============================================================
+# Under-sampling throws away most of the majority class. EasyEnsemble
+# (Liu, Wu & Zhou, 2009) under-samples B times with different majority
+# rows, fits a model to each balanced set and averages the predicted
+# probabilities. The paper uses boosting inside each subset; we use our
+# own two classifiers so the comparison with the other approaches is fair.
 
 easy_ensemble <- function(train, test, classifier, B = ENSEMBLE_B) {
   prob.sum <- rep(0, nrow(test))
   for (b in 1:B) {
-    # ---- Block 1: a fresh balanced under-sample (Approach A2 code) ----
     bal <- undersample(train)
 
-    # ---- Block 2: fit one member on it ----
-    # Forest members get N_TREES / B trees each, so the whole ensemble has
-    # the same number of trees as one ordinary forest (fair compute).
+    # forest members get N_TREES / B trees, so the ensemble has as many
+    # trees in total as one ordinary forest
     if (classifier == "logistic") {
       model <- fit_logistic(bal)
     } else {
       model <- fit_forest(bal, ntree = max(1, round(N_TREES / B)))
     }
 
-    # ---- Block 3: add its probabilities to the running total ----
     prob.sum <- prob.sum + predict_prob(model, test)
   }
-  # ---- Block 4: the ensemble's probability is the average ----
-  # Every member was trained on 50:50 data, so 0.5 is the natural cutoff.
+  # members were trained on 50:50 data, so we cut at 0.5
   list(prob = prob.sum / B, cutoff = 0.5)
 }
 
-# =============================================================
-# Rerun the ensemble on EXACTLY the data the other approaches saw.
-# Same seeds as run_one() / run_real_split() -> identical train/test,
-# so the ensemble can be compared pair by pair with Steps 5 and 7.
-# Seeds 13 and 14 follow the 12 methods' seeds 1-12 used there.
-# =============================================================
+# The functions below rebuild exactly the same train/test data as
+# run_one() and run_real_split() (same seeds), so the ensemble can be
+# compared with the other approaches replicate by replicate.
+# Seeds 13 and 14 continue after the 12 methods' seeds.
 
-# ---- Simulation: one design row ----
 run_one_ensemble <- function(row) {
+  set_forest_rows(row$n)
   set.seed(row$seed)
-  train <- gen_data(row$n,  row$prev, row$sep, row$beta0)   # same as run_one()
+  train <- gen_data(row$n,  row$prev, row$sep, row$beta0)
   test  <- gen_data(N_TEST, row$prev, row$sep, row$beta0)
   out <- NULL
   for (k in seq_along(CLASSIFIERS)) {
@@ -61,11 +47,10 @@ run_one_ensemble <- function(row) {
         train.positives = sum(train$y == "1"), out)
 }
 
-# ---- Real data: one split ----
 run_real_split_ensemble <- function(split.id, data) {
   split.seed <- SEED + 10000 + split.id
   set.seed(split.seed)
-  sp <- standardize_split(split_real(data))                 # same as run_real_split()
+  sp <- standardize_split(split_real(data))
   out <- NULL
   for (k in seq_along(CLASSIFIERS)) {
     set.seed(split.seed * 100 + 12 + k)

@@ -1,33 +1,30 @@
-# =============================================================
-# 06_summarise_simulation.R  --  Step 6: tables and figures
-# Input : results/sim_results.rds   (from Step 5)
-# Output: results/sim_summary.rds, results/sim_paired.rds,
-#         results/table_*.csv, figures/fig2-fig4
-# =============================================================
+# 06_summarise_simulation.R
+# Summary tables and Figures 2-4 from results/sim_results.rds.
 source("R/00_setup.R")
 source("R/summarise.R")
 results <- readRDS(file.path(RESULTS_DIR, "sim_results.rds"))
 
-# ---- Block A: completeness check before trusting anything ----
+# make sure every replicate is there
 reps <- unique(results[, c("setting", "rep.id")])
-stopifnot(nrow(results) == 1600 * 13, nrow(reps) == 1600,
+n.reps.total <- length(PREVALENCES) * length(SAMPLE_SIZES) * length(SEPARATION) * N_REPS
+stopifnot(nrow(results) == n.reps.total * 13, nrow(reps) == n.reps.total,
           all(table(reps$setting) == N_REPS))
-cat("Results complete: 1600 replicates x 13 methods\n\n")
+cat("Results complete:", n.reps.total, "replicates x 13 methods\n\n")
 
-# ---- Block B: Summary 1 -- mean, sd, MCSE for every metric ----
+# mean, sd and MCSE of every metric
 summ <- summarise_metrics(results)
 saveRDS(summ, file.path(RESULTS_DIR, "sim_summary.rds"))
 cat("Largest MCSE of any mean:", round(max(summ$mcse, na.rm = TRUE), 4), "\n\n")
 
-# ---- Block C: Summary 2 -- paired change from baseline ----
+# paired change from the baseline
 paired <- rbind(paired_change(results, "roc.auc"),
                 paired_change(results, "pr.auc"),
                 paired_change(results, "sensitivity"),
                 paired_change(results, "bal.accuracy"))
 saveRDS(paired, file.path(RESULTS_DIR, "sim_paired.rds"))
 
-# ---- Block D: Table for the report -- pooled over separation ----
-# Change in ROC-AUC (ranking) next to change in sensitivity (a metric).
+# table for the report: change in ROC-AUC and in sensitivity,
+# pooled over the two separations
 pooled <- rbind(paired_change(results, "roc.auc", pool.sep = TRUE),
                 paired_change(results, "sensitivity", pool.sep = TRUE))
 tab <- pooled |>
@@ -39,26 +36,25 @@ write.csv(tab, file.path(RESULTS_DIR, "table_change_vs_baseline.csv"), row.names
 cat("Change from baseline, mean (MCSE), pooled over separation:\n")
 print(as.data.frame(tab), row.names = FALSE)
 
-# ---- Block E: Figure 2 -- did the RANKING improve? ----
+# Figure 2: change in ROC-AUC
 fig2 <- plot_change(
   paired_change(results, "roc.auc", pool.sep = TRUE),
   ylab = "Change in ROC-AUC vs baseline",
   title = "Ranking barely changes, except the forest with under-sampling",
   subtitle = "Paired difference from the baseline on the same data sets; bars = +/- 2 MCSE; 200 replicates per point")
 ggsave(file.path(FIGURES_DIR, "fig2_change_roc_auc.png"), fig2,
-       width = 9, height = 6, dpi = 200, bg = "white")
+       width = 11, height = 6, dpi = 200, bg = "white")
 
-# ---- Block F: Figure 3 -- did the METRIC improve? ----
+# Figure 3: change in sensitivity
 fig3 <- plot_change(
   paired_change(results, "sensitivity", pool.sep = TRUE),
   ylab = "Change in sensitivity vs baseline",
   title = "Sensitivity jumps for almost every approach",
   subtitle = "Paired difference from the baseline on the same data sets; bars = +/- 2 MCSE; 200 replicates per point")
 ggsave(file.path(FIGURES_DIR, "fig3_change_sensitivity.png"), fig3,
-       width = 9, height = 6, dpi = 200, bg = "white")
+       width = 11, height = 6, dpi = 200, bg = "white")
 
-# ---- Block G: Figure 4 -- how close to the best possible? ----
-# Gap to the Bayes benchmark in PR-AUC (focuses on the rare class).
+# Figure 4: PR-AUC gap to the Bayes benchmark
 gap <- bayes_gap(results, "pr.auc") |>
   group_by(prev, n, classifier, approach) |>
   summarise(mean = mean(mean), mcse = sqrt(sum(mcse^2)) / n(), .groups = "drop")
@@ -84,6 +80,6 @@ fig4 <- ggplot(gap, aes(prev.lab, mean, colour = approach, shape = approach, gro
   theme(legend.position = "top", panel.grid.minor = element_blank(),
         strip.text = element_text(face = "bold"))
 ggsave(file.path(FIGURES_DIR, "fig4_gap_pr_auc.png"), fig4,
-       width = 9, height = 6, dpi = 200, bg = "white")
+       width = 11, height = 6, dpi = 200, bg = "white")
 
 cat("\nSaved tables to results/ and figures 2-4 to figures/\n")

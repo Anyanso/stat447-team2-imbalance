@@ -1,17 +1,13 @@
-# =============================================================
-# 08_reconcile.R  --  Step 8: real-data summaries, and simulation vs real data
-# Input : results/real_results.rds (Step 7), results/sim_results.rds (Step 5)
-# Output: results/table_real.csv, results/table_reconcile.csv,
-#         figures/fig5_real_change.png, figures/fig6_real_tradeoff.png
-# =============================================================
+# 08_reconcile.R
+# Real-data summaries (Figures 5 and 6) and the comparison with the
+# closest simulated setting.
 source("R/00_setup.R")
 source("R/summarise.R")
 real <- readRDS(file.path(RESULTS_DIR, "real_results.rds"))
 sim  <- readRDS(file.path(RESULTS_DIR, "sim_results.rds"))
 stopifnot(nrow(real) == N_SPLITS * 13)
 
-# ---- Block A: real-data averages over the 10 splits (mean and SE) ----
-# With real data the "replicates" are the 10 random train/test splits.
+# averages over the 10 splits, with standard errors
 methods <- real[real$classifier != "none", ]
 tab.real <- methods |>
   group_by(classifier, approach) |>
@@ -24,8 +20,7 @@ null.row <- real[real$classifier == "none", ]
 cat("'Always not fraud': accuracy", round(mean(null.row$accuracy), 4),
     "| sensitivity", mean(null.row$sensitivity), "\n\n")
 
-# ---- Block B: PAIRED change from the baseline, split by split ----
-# Same idea as Step 6: each approach and the baseline used the same split.
+# change from the baseline, paired by split
 base <- methods[methods$approach == "baseline", c("split.id", "classifier", "roc.auc", "pr.auc")]
 names(base)[3:4] <- c("b.roc", "b.pr")
 d <- merge(methods[methods$approach != "baseline", ], base, by = c("split.id", "classifier"))
@@ -35,9 +30,8 @@ chg.real <- d |>
             pr.mean  = mean(pr.auc - b.pr),   pr.se  = sd(pr.auc - b.pr) / sqrt(n()),
             .groups = "drop")
 
-# ---- Block C: the matching simulation numbers ----
-# Closest simulated setting: lowest prevalence (1%), largest n (20,000),
-# high separation (real frauds are easy to rank: ROC-AUC about 0.95-0.98).
+# closest simulated setting: 1%, n = 20,000, high separation
+# (the real data is easy to rank, ROC-AUC around 0.95-0.98)
 sim.match <- sim[sim$prev == 0.01 & sim$n == 20000 & sim$sep.level == "high", ]
 sim.chg <- rbind(paired_change(sim.match, "roc.auc"), paired_change(sim.match, "pr.auc"))
 sim.chg <- sim.chg |>
@@ -58,7 +52,7 @@ write.csv(recon.out, file.path(RESULTS_DIR, "table_reconcile.csv"), row.names = 
 cat("Change from baseline, mean (MCSE or SE): simulation (1%, n = 20,000, high sep.) vs real data\n")
 print(recon.out, row.names = FALSE)
 
-# ---- Block D: Figure 5 -- real data, change in ROC-AUC and PR-AUC ----
+# Figure 5: change in ROC-AUC and PR-AUC on the real data
 f5 <- rbind(data.frame(classifier = chg.real$classifier, approach = chg.real$approach,
                        metric = "ROC-AUC", mean = chg.real$roc.mean, se = chg.real$roc.se),
             data.frame(classifier = chg.real$classifier, approach = chg.real$approach,
@@ -81,8 +75,7 @@ fig5 <- ggplot(f5, aes(mean, approach)) +
 ggsave(file.path(FIGURES_DIR, "fig5_real_change.png"), fig5,
        width = 9, height = 5, dpi = 200, bg = "white")
 
-# ---- Block E: Figure 6 -- the sensitivity / precision trade-off ----
-# Each point = one method at the cutoff it used. Up and right is better.
+# Figure 6: sensitivity vs precision, each method at its own cutoff
 f6 <- methods |>
   group_by(classifier, approach) |>
   summarise(sensitivity = mean(sensitivity), precision = mean(precision, na.rm = TRUE),
@@ -93,8 +86,7 @@ f6$approach <- factor(APPROACH_LABELS[f6$approach],
 f6$classifier <- ifelse(f6$classifier == "logistic", "Penalized logistic", "Random forest")
 fig6 <- ggplot(f6, aes(sensitivity, precision, colour = classifier, shape = classifier)) +
   geom_point(size = 3) +
-  # The five logistic approaches and forest under-sampling all land near
-  # (90%, 6%); label that cluster once instead of six overlapping labels.
+  # six methods sit on top of each other near (90%, 6%), so they get one label
   geom_text(data = f6[!(f6$classifier == "Penalized logistic" & f6$approach != "Baseline") &
                         !(f6$classifier == "Random forest" & f6$approach == "Under-sampling"), ],
             aes(label = approach), nudge_y = 0.035, size = 3, show.legend = FALSE) +

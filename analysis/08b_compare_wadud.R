@@ -1,17 +1,12 @@
-# =============================================================
-# 08b_compare_wadud.R  --  Robustness check: our simulation vs the
-# independent second implementation (01_Simulation_Experiment (1).R).
-# Input : results/sim_results.rds (ours)
-#         results/simulation/tables/simulation__all_metrics.csv (second study)
-# Output: results/table_robustness_agreement.csv,
-#         figures/fig8_partner_comparison.png   (report: change vs baseline)
-#         figures/fig8b_agreement.png           (slides: ours vs theirs, one dot each)
-# =============================================================
+# 08b_compare_wadud.R
+# Robustness check: compares our simulation with Wadud's separate
+# implementation (results/simulation/tables/). Makes Figure 8 for the
+# report and Figure 8b for the slides.
 source("R/00_setup.R")
 his  <- read.csv("results/simulation/tables/simulation__all_metrics.csv")
 ours <- readRDS(file.path(RESULTS_DIR, "sim_results.rds"))
 
-# ---- Block A: second study -- change from its own baseline, same data set ----
+# Wadud's study: change from its own baseline on the same data set
 h <- his[his$Operating_Rule == "default_0.5" &
          his$Classifier %in% c("Penalized_Logistic", "Random_Forest"), ]
 h$classifier <- ifelse(h$Classifier == "Penalized_Logistic", "logistic", "forest")
@@ -28,7 +23,7 @@ his.chg <- hd |>
             .groups = "drop") |>
   mutate(study = "Second implementation (3 reps)")
 
-# ---- Block B: ours, high separation (closest difficulty), same quantities ----
+# ours, high separation (closest in difficulty)
 o <- ours[ours$sep.level == "high" &
           ours$approach %in% c("baseline", "oversample", "undersample", "smote", "weights"), ]
 ob <- o[o$approach == "baseline", c("setting", "rep.id", "classifier", "roc.auc", "pr.auc", "sensitivity")]
@@ -41,7 +36,7 @@ our.chg <- od |>
             .groups = "drop") |>
   mutate(study = "Main study (100 reps)")
 
-# ---- Block C: agreement at n = 20,000 (enough test positives in both) ----
+# agreement at n = 20,000, where both have enough test positives
 both <- bind_rows(his.chg, our.chg) |> filter(n == 20000)
 w <- both |>
   select(study, prev, classifier, approach, d.roc_m, d.pr_m, d.sens_m) |>
@@ -54,7 +49,7 @@ cat("Same direction (|change| < 0.005 = no change):",
     "ROC-AUC", round(mean(sgn(w$roc.second) == sgn(w$roc.main)), 2),
     "| PR-AUC", round(mean(sgn(w$pr.second) == sgn(w$pr.main)), 2), "\n")
 
-# ---- Block D: Figure 8 (report) -- change vs baseline, both studies ----
+# Figure 8 (report): change vs baseline in both studies
 lab <- c(oversample = "Over-sampling", undersample = "Under-sampling",
          smote = "SMOTE", weights = "Class weights")
 f <- both
@@ -83,9 +78,8 @@ fig8 <- ggplot(long, aes(prev.lab, m, colour = study, shape = study, group = stu
 ggsave(file.path(FIGURES_DIR, "fig8_partner_comparison.png"), fig8,
        width = 11, height = 9, dpi = 170, bg = "white")
 
-# ---- Block E: Figure 8b (slides) -- one dot per comparison ----
-# x = change in our study, y = change in the second study. Dots on the
-# diagonal = the two studies agree. 32 comparisons per metric.
+# Figure 8b (slides): our change against Wadud's, one dot per comparison;
+# dots on the diagonal mean the two studies agree
 sc <- bind_rows(
   w |> transmute(classifier, approach, metric = "ROC-AUC", main = roc.main, second = roc.second),
   w |> transmute(classifier, approach, metric = "PR-AUC", main = pr.main, second = pr.second))

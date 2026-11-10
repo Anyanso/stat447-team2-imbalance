@@ -1,10 +1,7 @@
-# =============================================================
-# 10_slide_figures.R  --  Redraw the report figures at SLIDE size:
-# bigger text, no in-figure titles (the slide title does that job).
-# Output: figures/slides/*.png   (the report keeps figures/*.png)
-# Results tables are written to a temporary copy, so the committed
-# results/ folder is never touched.
-# =============================================================
+# 10_slide_figures.R
+# Redraws the figures for the slides (bigger text, no titles) into
+# figures/slides/. Tables get written to a temporary copy of results/
+# so the real one isn't touched.
 SLIDE_MODE <- TRUE
 FIGURES_DIR_OVERRIDE <- "figures/slides"
 RESULTS_DIR_OVERRIDE <- file.path(tempdir(), "results_copy")

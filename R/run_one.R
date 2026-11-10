@@ -1,28 +1,28 @@
-# =============================================================
-# run_one.R  --  OWNER: John Anyanso   (Step 5)
-# ONE replicate of the simulation = one row of the design grid.
-# Class simulation deck, S.7 Step 2: "one replicate returns one row
-# of results" -- here one row per (classifier, approach), plus Bayes.
-# =============================================================
+# run_one.R -- one replicate of the simulation (John Anyanso)
+# Takes one row of the design and returns one result row per
+# classifier x approach, plus the Bayes benchmark.
+
+# Forests at n = 100,000 draw BIG_N_SAMPSIZE rows per tree, as on the
+# real data, otherwise the run takes days. Smaller n use the usual bootstrap.
+set_forest_rows <- function(n) {
+  FOREST_SAMPSIZE <<- if (n > 20000) BIG_N_SAMPSIZE else NULL
+}
 
 run_one <- function(row) {
 
-  # ---- Block 1: this replicate's data (same seed -> same data, any laptop) ----
+  set_forest_rows(row$n)
   set.seed(row$seed)
-  train <- gen_data(row$n,  row$prev, row$sep, row$beta0)   # what the methods see
-  test  <- gen_data(N_TEST, row$prev, row$sep, row$beta0)   # fresh and large (deck, Mistake 3)
+  train <- gen_data(row$n,  row$prev, row$sep, row$beta0)
+  test  <- gen_data(N_TEST, row$prev, row$sep, row$beta0)   # large, fresh test set
 
-  # ---- Block 2: the Bayes benchmark (the answer key) ----
   out <- cbind(classifier = "truth", approach = "bayes",
                bayes_benchmark(test, row$prev), seconds = 0)
 
-  # ---- Block 3: every classifier x approach on the SAME data ----
   j <- 0
   for (cl in CLASSIFIERS) {
     for (ap in APPROACHES) {
       j <- j + 1
-      # Each method gets its OWN seed, so its result does not depend on
-      # which methods ran before it.
+      # separate seed per method so results don't depend on the order they run in
       set.seed(row$seed * 100 + j)
       secs <- system.time(res <- fit_and_predict(train, test, ap, cl))["elapsed"]
       out <- rbind(out, cbind(classifier = cl, approach = ap,
@@ -31,7 +31,6 @@ run_one <- function(row) {
     }
   }
 
-  # ---- Block 4: label every result row with its settings ----
   cbind(prev = row$prev, n = row$n, sep.level = row$sep.level,
         rep.id = row$rep.id, setting = row$setting,
         train.positives = sum(train$y == "1"),

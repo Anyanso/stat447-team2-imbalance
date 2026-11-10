@@ -1,20 +1,15 @@
-# =============================================================
-# 01_check_gen_data.R  --  Step 1: does the generator do what we asked?
-# (Class simulation deck, Mistake 4: "check that your generator did
-#  what you asked")
-# Base-R syntax as in the ISLR (R edition) labs; ggplot for the figure.
-# =============================================================
+# 01_check_gen_data.R
+# Checks that gen_data() produces what we asked for, saves the beta0
+# table and makes Figure 1.
 source("R/00_setup.R")
 set.seed(SEED)
 
-# ---- Check 1: the intercepts --------------------------------
-# One beta0 per (prevalence, separation). The slopes are the same in every row.
+# intercepts: one per prevalence x separation
 beta0.tab <- make_beta0_table()
 print(beta0.tab)
 saveRDS(beta0.tab, file.path(RESULTS_DIR, "beta0_table.rds"))
 
-# ---- Check 2: observed prevalence vs. target ----------------
-# A BIG data set per setting, so the check itself is not noisy.
+# observed vs target prevalence, on a big sample so the check isn't noisy
 beta0.tab$observed <- NA
 for (i in 1:nrow(beta0.tab)) {
   d <- gen_data(200000, beta0.tab$prev[i], beta0.tab$sep[i], beta0.tab$beta0[i])
@@ -25,10 +20,8 @@ print(data.frame(sep = beta0.tab$sep.level,
                  target = 100 * beta0.tab$prev,
                  observed = round(100 * beta0.tab$observed, 2)))
 
-# ---- Check 3: are the TRUE slopes recovered? -----------------
-# Ordinary logistic regression (ISLR 4.7.2, p. 172) on a huge sample.
-# The slopes should match sep * beta at EVERY prevalence -- that is the
-# whole point of moving only beta0.
+# glm on a huge sample should give back sep * beta at every prevalence
+# (only the intercept should move)
 high <- beta0.tab[beta0.tab$sep.level == "high", ]
 slopes <- matrix(NA, nrow(high), 6,
                  dimnames = list(paste0("prev = ", high$prev),
@@ -41,17 +34,14 @@ for (i in 1:nrow(high)) {
 cat("\nTrue slopes (high separation):", SEPARATION["high"] * beta, "\n")
 print(round(slopes, 2))
 
-# ---- Check 4: count vs. proportion of minority cases ---------
-# The handout wants a small PROPORTION with a large COUNT, and the reverse.
+# expected number of positives in a training set
 counts <- outer(PREVALENCES, SAMPLE_SIZES)
 dimnames(counts) <- list(paste0("prev = ", PREVALENCES),
                          paste0("n = ", SAMPLE_SIZES))
 cat("\nExpected number of minority cases in a training set:\n")
 print(counts)
 
-# ---- Check 5: how hard is each setting? (Bayes benchmark preview) ---
-# ROC-AUC of the TRUE probabilities = the best ranking any method can get.
-# ROCR's prediction() / performance(): ISLR 9.6.3, p. 394.
+# ROC-AUC of the true probabilities = best possible ranking in each setting
 beta0.tab$bayes.auc <- NA
 for (i in 1:nrow(beta0.tab)) {
   d <- gen_data(200000, beta0.tab$prev[i], beta0.tab$sep[i], beta0.tab$beta0[i])
@@ -61,13 +51,12 @@ for (i in 1:nrow(beta0.tab)) {
 cat("\nBayes ROC-AUC (best possible) by setting:\n")
 print(round(xtabs(bayes.auc ~ sep.level + prev, data = beta0.tab), 3))
 
-# ---- Check 6: reproducibility --------------------------------
+# same seed, same data
 set.seed(SEED); a <- gen_data(50, 0.05, 1.5, beta0.tab$beta0[6])
 set.seed(SEED); b <- gen_data(50, 0.05, 1.5, beta0.tab$beta0[6])
 cat("\nSame seed gives identical data:", identical(a, b), "\n")
 
-# ---- Figure: what imbalance looks like ------------------------
-# Same slopes, same predictors; only beta0 changes from panel to panel.
+# Figure 1: same slopes in every panel, only beta0 changes
 plot.df <- NULL
 for (i in 1:nrow(beta0.tab)) {
   d <- gen_data(3000, beta0.tab$prev[i], beta0.tab$sep[i], beta0.tab$beta0[i])
@@ -79,7 +68,7 @@ plot.df$prev.lab <- factor(paste0(100 * plot.df$prev, "% minority"),
                            levels = paste0(100 * PREVALENCES, "% minority"))
 plot.df$sep.lab <- paste(plot.df$sep.level, "separation")
 plot.df$class <- ifelse(plot.df$y == "1", "Minority (y = 1)", "Majority (y = 0)")
-plot.df <- plot.df[order(plot.df$class), ]   # draw minority points on top
+plot.df <- plot.df[order(plot.df$class), ]   # minority points drawn on top
 
 fig <- ggplot(plot.df, aes(x1 - x2, x3 - x4, colour = class)) +
   geom_point(size = 0.7, alpha = 0.6) +

@@ -1,16 +1,15 @@
-# =============================================================
-# 03_check_approaches.R  --  Step 3 checks: do the approaches run,
-# give sensible probabilities, and how long do they take?
-# =============================================================
+# 03_check_approaches.R
+# Quick checks that every approach runs, gives sensible probabilities,
+# and how long each takes.
 source("R/00_setup.R")
 design <- readRDS(file.path(RESULTS_DIR, "design.rds"))
 
-# Quick scores until Step 4's evaluate() exists
-auc  <- function(prob, y) performance(prediction(prob, y), "auc")@y.values[[1]]  # ISLR p. 394
-sens <- function(prob, y, cutoff) mean(prob[y == "1"] > cutoff)   # share of positives caught
-spec <- function(prob, y, cutoff) mean(prob[y == "0"] <= cutoff)  # share of negatives cleared
+# simple scores for checking (evaluate.R does the real scoring)
+auc  <- function(prob, y) performance(prediction(prob, y), "auc")@y.values[[1]]
+sens <- function(prob, y, cutoff) mean(prob[y == "1"] > cutoff)
+spec <- function(prob, y, cutoff) mean(prob[y == "0"] <= cutoff)
 
-# ---- Check 1: does each resampler balance the TRAINING data? ----
+# do the resamplers balance the training data?
 row <- design[design$prev == 0.05 & design$n == 1000 &
               design$sep.level == "high" & design$rep.id == 1, ]
 set.seed(row$seed)
@@ -27,25 +26,25 @@ for (i in 1:4) {
 cat("Check 1: class counts after resampling (5%, n = 1000)\n")
 print(balance, row.names = FALSE)
 
-# SMOTE rows must be NEW points, not copies of real ones
+# SMOTE rows should be new points, not copies
 sm <- smote(train)
 synthetic <- sm[is.na(sm$p.true), ]
 cat("\nSMOTE: synthetic rows =", nrow(synthetic),
     "| exact copies of real rows =",
     sum(duplicated(rbind(train[, 1:5], synthetic[, 1:5]))[-(1:nrow(train))]), "\n\n")
 
-# ---- Check 2: every approach built so far, on three settings ----
+# all approaches on three settings
 check.rows <- c(
   which(design$prev == 0.05 & design$n == 1000  & design$sep.level == "high" & design$rep.id == 1),
   which(design$prev == 0.01 & design$n == 1000  & design$sep.level == "high" & design$rep.id == 1),
   which(design$prev == 0.05 & design$n == 20000 & design$sep.level == "high" & design$rep.id == 1)
 )
-built <- APPROACHES   # all six
+built <- APPROACHES
 
 out <- NULL
 for (r in check.rows) {
   row <- design[r, ]
-  set.seed(row$seed)                                   # this replicate's seed
+  set.seed(row$seed)
   train <- gen_data(row$n,  row$prev, row$sep, row$beta0)
   test  <- gen_data(N_TEST, row$prev, row$sep, row$beta0)
 

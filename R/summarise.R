@@ -1,25 +1,19 @@
-# =============================================================
-# summarise.R  --  OWNER: John Anyanso   (Step 6)
-# Turn 20,800 raw result rows into averages WITH uncertainty.
-# Class simulation deck, S.7 Step 5 and Mistake 4:
-#   "every aggregate number needs a partner" -> mean and MCSE = sd / sqrt(B)
-# =============================================================
+# summarise.R -- summaries and plot helper for the simulation (John Anyanso)
+# Every average is reported with its Monte Carlo standard error,
+# MCSE = sd / sqrt(B).
 
 METRICS <- c("sensitivity", "specificity", "precision", "f1",
              "bal.accuracy", "accuracy", "roc.auc", "pr.auc")
 
-# Display names and order used in every table and figure
+# labels and order used in all tables and figures
 APPROACH_LABELS <- c(baseline = "Baseline", oversample = "Over-sampling",
                      undersample = "Under-sampling", smote = "SMOTE",
                      weights = "Class weights", threshold = "Threshold",
                      bayes = "Bayes (truth)")
 
-# -------------------------------------------------------------
-# Summary 1: mean, sd and MCSE of every metric
-# for each setting x classifier x approach (100 replicates each).
-# Precision is undefined when a method flags nothing; those replicates
-# are left out of its mean, and n.flag.none counts them.
-# -------------------------------------------------------------
+# Mean, sd and MCSE of each metric by setting x classifier x approach.
+# Precision is undefined when nothing is flagged; those replicates are
+# dropped from the mean and counted in n.flag.none.
 summarise_metrics <- function(results) {
   long <- pivot_longer(results, all_of(METRICS),
                        names_to = "metric", values_to = "value")
@@ -30,16 +24,13 @@ summarise_metrics <- function(results) {
               B    = sum(!is.na(value)),
               n.flag.none = sum(is.na(value)),
               .groups = "drop")
-  summ$mcse <- summ$sd / sqrt(summ$B)          # Monte Carlo standard error
+  summ$mcse <- summ$sd / sqrt(summ$B)
   summ
 }
 
-# -------------------------------------------------------------
-# Summary 2: PAIRED change from the baseline.
-# Every approach ran on the same 100 data sets as the baseline, so we
-# subtract replicate by replicate. The shared randomness cancels, which
-# makes the comparison far more precise than comparing two averages.
-# -------------------------------------------------------------
+# Change from the baseline, paired by replicate. All approaches ran on the
+# same data sets as the baseline, so the differences are much less noisy
+# than comparing two averages.
 paired_change <- function(results, metric, pool.sep = FALSE) {
   base <- results[results$approach == "baseline",
                   c("setting", "rep.id", "classifier", metric)]
@@ -59,10 +50,7 @@ paired_change <- function(results, metric, pool.sep = FALSE) {
     mutate(metric = metric)
 }
 
-# -------------------------------------------------------------
-# Summary 3: gap to the Bayes benchmark (how far from the best possible)
-# gap = Bayes value - method value, replicate by replicate.
-# -------------------------------------------------------------
+# Gap to the Bayes benchmark: Bayes value minus method value, per replicate.
 bayes_gap <- function(results, metric) {
   bay <- results[results$approach == "bayes", c("setting", "rep.id", metric)]
   names(bay)[3] <- "bayes.value"
@@ -75,10 +63,8 @@ bayes_gap <- function(results, metric) {
     mutate(metric = metric)
 }
 
-# -------------------------------------------------------------
-# Plot helper: change from baseline vs prevalence, with +/- 2 MCSE bars.
-# One panel per classifier x sample size; colour AND shape = approach.
-# -------------------------------------------------------------
+# Change from baseline against prevalence, with +/- 2 MCSE bars.
+# One panel per classifier and sample size.
 plot_change <- function(chg, ylab, title, subtitle) {
   chg$approach <- factor(APPROACH_LABELS[chg$approach],
                          levels = APPROACH_LABELS[c("oversample", "undersample",
