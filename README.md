@@ -18,7 +18,7 @@ class weights, threshold adjustment) improve *prediction*, or only the *metric*?
 | `R/00_setup.R` | packages, seed (447), paths, study settings. Source it everywhere. |
 | `R/gen_data.R` | simulation generator (John Anyanso) |
 | `R/approaches.R` | the three approaches + two classifiers (all three people) |
-| `R/evaluate.R` | the metric function and Bayes benchmark (Wadud Ambali) |
+| `R/evaluate.R` | the metric function and Bayes benchmark (Nidhi Prajapati) |
 | `R/ensemble.R` | EasyEnsemble, STAT 847 extension (Wadud Ambali) |
 | `analysis/` | scripts that run things and save results |
 | `results/` | saved `.rds` results, so the report never reruns the simulation |
