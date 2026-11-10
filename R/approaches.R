@@ -1,9 +1,9 @@
 # =============================================================
 # approaches.R  --  the three approach families (Step 3)
 #   Shared helpers + classifiers + baseline ... all (piece 1)
-#   Approach A, resampling ................... Person 1 (piece 2)
-#   Approach B, class weights ................ Person 2 (piece 3)
-#   Approach C, threshold .................... Person 3 (piece 4)
+#   Approach A, resampling ................... John Anyanso (piece 2)
+#   Approach B, class weights ................ Nidhi Prajapati (piece 3)
+#   Approach C, threshold .................... Ambali Wadud (piece 4)
 # Base-R syntax of the ISLR (R edition) labs; book page numbers cited.
 # =============================================================
 # CONTRACT (agreed on day 1)
@@ -105,7 +105,7 @@ fit_classifier <- function(train, classifier) {
 }
 
 # =============================================================
-# APPROACH A: RESAMPLING  (Person 1)
+# APPROACH A: RESAMPLING  (John Anyanso)
 # Change the TRAINING data so the classes are balanced 50 : 50.
 # The model and the 0.5 cutoff stay the same. The test set is untouched.
 # =============================================================
@@ -168,7 +168,7 @@ smote <- function(train, k = 5) {
 }
 
 # =============================================================
-# APPROACH B: CLASS WEIGHTS  (Person 2)
+# APPROACH B: CLASS WEIGHTS  (Nidhi Prajapati)
 # Keep the data as it is, but make each positive COUNT more.
 # Weight = (number of negatives) / (number of positives), so both
 # classes carry the same total weight -- "balanced" weights.
@@ -180,7 +180,7 @@ positive_weight <- function(y) {
 }
 
 # =============================================================
-# APPROACH C: THRESHOLD ADJUSTMENT  (Person 3)
+# APPROACH C: THRESHOLD ADJUSTMENT  (Ambali Wadud)
 # Leave the model alone; only move the cutoff away from 0.5.
 # Lecture 6: "Nothing forces 0.5" -- a cutoff t encodes a cost ratio
 # (1 - t) / t.

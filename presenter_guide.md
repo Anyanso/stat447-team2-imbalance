@@ -12,13 +12,12 @@ Every slide below has the same parts: the idea in plain words, the formula if th
 
 | Slides | Speaker | Topic | Time |
 | --- | --- | --- | --- |
-| 1–6 | Person 1 | Problem, question, simulation design, first two results | 5 min |
-| 7–8 | Person 3 | Gap to the best possible, threshold | 3 min |
-| 9–11 | Person 2 | Real fraud data, precision trade-off, reconciling | 4 min |
-| 12–13 | Person 3 | STAT 847 EasyEnsemble, robustness check | 3 min |
+| 1–6 | John Anyanso | Problem, question, simulation design, first two results | 5 min |
+| 7–8 | Ambali Wadud | Gap to the best possible, threshold | 3 min |
+| 9–11 | Nidhi Prajapati | Real fraud data, precision trade-off, reconciling | 4 min |
+| 12–13 | Ambali Wadud | STAT 847 EasyEnsemble, robustness check | 3 min |
 | 14–15 | Everyone | Conclusions, questions | 2 min + Q&A |
 
-Replace Person 1, 2 and 3 with your names on the title slide before you present.
 
 ### Five words everyone must be able to define
 
@@ -34,11 +33,11 @@ Replace Person 1, 2 and 3 with your names on the title slide before you present.
 
 ## Slides 1–3: the problem and our question
 
-### Slide 1 — Title (Person 1, 15 seconds)
+### Slide 1 — Title (John Anyanso, 15 seconds)
 
 Say the title, the team, and the one-sentence answer from "How to use this guide". Telling the audience the answer up front makes every later slide easier to follow.
 
-### Slide 2 — "99.8% accurate and useless" (Person 1)
+### Slide 2 — "99.8% accurate and useless" (John Anyanso)
 
 **The idea.** When one class is very rare, a model can score high accuracy by never predicting it. Accuracy counts every correct answer equally, so the 99.83% of normal transactions swamp the 0.17% of frauds.
 
@@ -48,7 +47,7 @@ Say the title, the team, and the one-sentence answer from "How to use this guide
 
 **What to say.** "Accuracy rewards ignoring the rare class. So the question is not how to raise accuracy, but how to find the frauds."
 
-### Slide 3 — Our question (Person 1)
+### Slide 3 — Our question (John Anyanso)
 
 **The idea.** People usually reach for one of three fixes. We test whether each one makes the model genuinely better, or only makes a number look better.
 
@@ -71,7 +70,7 @@ We picked one rigid, correctly shaped model and one flexible model on purpose, b
 
 **Likely question.** *"Why these two classifiers?"* Logistic regression is the model the handout and Lecture 5 use for a yes/no outcome. The forest is the most common flexible alternative. Between them they cover "simple and right" and "flexible and noisy".
 
-## Slide 4: the simulation design (Person 1)
+## Slide 4: the simulation design (John Anyanso)
 
 **The idea.** With real data we can never know how good the best possible model is. In a simulation we write the true rule ourselves, so we have an answer key. The notes put it as "you play nature" (Notes, Project Support §S.3).
 
@@ -126,7 +125,7 @@ Every point is a **paired change**: in each replicate, the remedy's score minus 
 
 **Worked example of MCSE.** Forest under-sampling at 1% prevalence raised ROC-AUC by 0.048 with MCSE 0.002. 0.048 is 24 MCSEs from zero: a real effect, not luck.
 
-### Slide 5 — Result 1: sensitivity jumps (Person 1)
+### Slide 5 — Result 1: sensitivity jumps (John Anyanso)
 
 **What the figure shows.** For logistic regression, every remedy raises sensitivity, by +0.44 to +0.72 at the rarer prevalences. For the forest, everything except class weights raises it too.
 
@@ -134,7 +133,7 @@ Every point is a **paired change**: in each replicate, the remedy's score minus 
 
 **What to say.** "Judged by sensitivity, every remedy works. Most papers stop here. We asked whether the model got better, or whether it just flags more people."
 
-### Slide 6 — Result 2: the ranking barely moves (Person 1)
+### Slide 6 — Result 2: the ranking barely moves (John Anyanso)
 
 **What the figure shows.** Change in ROC-AUC. For logistic regression every remedy sits on zero. For the forest, under-sampling gains +0.048 at 1% (MCSE 0.002); class weights lose about 0.018.
 
@@ -155,7 +154,7 @@ This is a known result for case-control sampling (Prentice & Pyke, 1979): sampli
 
 **One small exception for logistic.** At 1% with n = 1,000, over-sampling and SMOTE gained +0.015 ROC-AUC. The reason: with about 10 positives, the baseline lasso shrank every slope to zero in 12.5% of replicates, a flat model with AUC 0.5. Rebalancing stopped that collapse. It's a small-count rescue, not a better model.
 
-### Slide 7 — Result 3: nothing closes the gap (Person 3)
+### Slide 7 — Result 3: nothing closes the gap (Ambali Wadud)
 
 **What the figure shows.** For each method, Bayes PR-AUC minus the method's PR-AUC. Lower is better; zero would mean as good as the true probabilities.
 
@@ -167,7 +166,7 @@ This is a known result for case-control sampling (Prentice & Pyke, 1979): sampli
 
 **Likely question.** *"If PR-AUC got worse, why does sensitivity look better?"* Because sensitivity only counts frauds caught. Precision counts the false alarms you paid to catch them, and PR-AUC tracks both.
 
-## Slide 8: the threshold gets the same gains, for free (Person 3)
+## Slide 8: the threshold gets the same gains, for free (Ambali Wadud)
 
 **The idea.** If rebalancing only moves the cutoff, we can move the cutoff directly and skip the rebalancing. That keeps the model's probabilities honest.
 
@@ -205,7 +204,7 @@ Worked example: t = 0.046 means (1 − 0.046) / 0.046 ≈ 21. Choosing that cuto
 
 **Likely question.** *"This is one replicate. Does it hold in general?"* Yes: across all 100 replicates the threshold's ROC-AUC change is exactly zero (same model), and its sensitivity gain is in the same range as resampling's (slide 5).
 
-## Slides 9–11: real data, the trade-off, and reconciling (Person 2)
+## Slides 9–11: real data, the trade-off, and reconciling (Nidhi Prajapati)
 
 ### Slide 9 — Real data: 284,807 transactions, 10 splits
 
@@ -265,7 +264,7 @@ Means over the 10 splits. Every logistic row has ROC-AUC 0.977–0.979: the rank
 
 **Likely question.** *"So should we trust the simulation or the real data?"* Both answer different questions (Notes, §S.2): real data says which method wins here; the simulation says why, and how far from perfect each method is.
 
-## Slides 12–13: STAT 847 ensemble and robustness (Person 3)
+## Slides 12–13: STAT 847 ensemble and robustness (Ambali Wadud)
 
 ### Slide 12 — STAT 847: EasyEnsemble
 
@@ -315,11 +314,11 @@ Each member sees balanced data; together they see most of the normal rows.
 
 **Slide 14: each person states the conclusion from their own part.** Suggested split:
 
-1. **Person 1:** "For logistic regression, the remedies change the operating point, not the ranking. Sensitivity rises to about 90%, but no remedy improves ROC-AUC or PR-AUC."
-2. **Person 2:** "Forests are different. Under-sampling, and on the real data SMOTE, can improve the ranking when the rare class is very rare."
-3. **Person 3:** "Accuracy is the wrong target. Judge the ranking by PR-AUC, then pick the cutoff from the real costs of a missed fraud versus a false alarm."
-4. **Person 3:** "For logistic models, prefer the threshold: the same sensitivity, honest probabilities, no retraining."
-5. **Person 3 (STAT 847):** "EasyEnsemble helps forests, up to +0.03 ROC-AUC at 1%, but not logistic regression, and not PR-AUC."
+1. **John Anyanso:** "For logistic regression, the remedies change the operating point, not the ranking. Sensitivity rises to about 90%, but no remedy improves ROC-AUC or PR-AUC."
+2. **Nidhi Prajapati:** "Forests are different. Under-sampling, and on the real data SMOTE, can improve the ranking when the rare class is very rare."
+3. **Ambali Wadud:** "Accuracy is the wrong target. Judge the ranking by PR-AUC, then pick the cutoff from the real costs of a missed fraud versus a false alarm."
+4. **Ambali Wadud:** "For logistic models, prefer the threshold: the same sensitivity, honest probabilities, no retraining."
+5. **Ambali Wadud (STAT 847):** "EasyEnsemble helps forests, up to +0.03 ROC-AUC at 1%, but not logistic regression, and not PR-AUC."
 
 **The one-line answer to the handout.** "Do the standard remedies improve prediction, or only the metric? For a correctly specified logistic model, only the metric. For flexible models on very rare classes, sometimes prediction too."
 

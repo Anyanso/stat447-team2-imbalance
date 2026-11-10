@@ -1,5 +1,5 @@
 # =============================================================
-# evaluate.R  --  OWNER: Person 3   (Step 4)
+# evaluate.R  --  OWNER: Nidhi Prajapati   (Step 4)
 # The grading function every approach is scored with.
 # Definitions follow ISLR Tables 4.6-4.7 (pp. 152-153) and Lecture 6.
 # =============================================================

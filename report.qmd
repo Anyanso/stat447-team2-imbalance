@@ -2,9 +2,9 @@
 title: "Class Imbalance: Can Prediction Be Improved?"
 subtitle: "STAT 447/847 Course Project, Team 2"
 author:
-  - "Person 1"
-  - "Person 2"
-  - "Person 3"
+  - "John Anyanso"
+  - "Nidhi Prajapati"
+  - "Ambali Wadud"
 date: today
 format:
   pdf:
@@ -32,16 +32,16 @@ source("R/00_setup.R")
 
 ## Simulation design
 
-<!-- Person 1: the logistic model, beta0 via uniroot, design grid, seed 447. -->
+<!-- John Anyanso: the logistic model, beta0 via uniroot, design grid, seed 447. -->
 
 ## The three approaches
 
-<!-- A. Resampling (Person 1), B. Class weights (Person 2),
-     C. Threshold (Person 3). Both classifiers. Training-only rules. -->
+<!-- A. Resampling (John Anyanso), B. Class weights (Nidhi Prajapati),
+     C. Threshold (Ambali Wadud). Both classifiers. Training-only rules. -->
 
 ## Evaluation
 
-<!-- Person 3: the seven metrics, the Bayes benchmark, MCSE. -->
+<!-- Nidhi Prajapati: the seven metrics, the Bayes benchmark, MCSE. -->
 
 # Simulation results {#sec-sim}
 
@@ -52,13 +52,13 @@ source("R/00_setup.R")
 
 # Real data: credit card fraud {#sec-real}
 
-<!-- Person 2 -->
+<!-- Nidhi Prajapati -->
 
 # Reconciling simulation and real data {#sec-reconcile}
 
 # STAT 847 extension: EasyEnsemble {#sec-ensemble}
 
-<!-- Person 3 -->
+<!-- Ambali Wadud -->
 
 # Conclusion {#sec-conclusion}
 

@@ -1,5 +1,5 @@
 # =============================================================
-# ensemble.R  --  OWNER: Person 3 (STAT 847 extension, Step 9)
+# ensemble.R  --  OWNER: Ambali Wadud (STAT 847 extension, Step 9)
 # EasyEnsemble (Liu, Wu & Zhou, 2009), with our two classifiers.
 # =============================================================
 # The weakness of under-sampling: it throws most majority rows away.

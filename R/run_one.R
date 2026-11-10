@@ -1,5 +1,5 @@
 # =============================================================
-# run_one.R  --  OWNER: Person 1   (Step 5)
+# run_one.R  --  OWNER: John Anyanso   (Step 5)
 # ONE replicate of the simulation = one row of the design grid.
 # Class simulation deck, S.7 Step 2: "one replicate returns one row
 # of results" -- here one row per (classifier, approach), plus Bayes.

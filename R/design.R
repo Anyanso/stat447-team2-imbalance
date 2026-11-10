@@ -1,5 +1,5 @@
 # =============================================================
-# design.R  --  OWNER: Person 1   (Step 2)
+# design.R  --  OWNER: John Anyanso   (Step 2)
 # The design grid: one row = one simulated data set to create.
 # Class simulation deck, S.7 Step 3 ("Factors = the things you vary;
 # levels = the values they take. Set them in ONE place.")

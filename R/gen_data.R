@@ -1,5 +1,5 @@
 # =============================================================
-# gen_data.R  --  OWNER: Person 1   (Step 1)
+# gen_data.R  --  OWNER: John Anyanso   (Step 1)
 # Written in the base-R syntax of the ISLR (R edition, 2nd ed.) labs.
 # Page numbers below are the BOOK's printed page numbers.
 # =============================================================

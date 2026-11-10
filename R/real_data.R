@@ -1,5 +1,5 @@
 # =============================================================
-# real_data.R  --  OWNER: Person 2   (Step 7)
+# real_data.R  --  OWNER: Nidhi Prajapati   (Step 7)
 # The Kaggle Credit Card Fraud data: 284,807 transactions, 492 frauds.
 # Columns: Time, V1-V28 (already PCA-transformed by the data owners),
 #          Amount, Class (1 = fraud).

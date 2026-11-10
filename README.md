@@ -19,7 +19,7 @@ class weights, threshold adjustment) improve *prediction*, or only the *metric*?
 | `R/gen_data.R` | simulation generator (John Anyanso) |
 | `R/approaches.R` | the three approaches + two classifiers (all three people) |
 | `R/evaluate.R` | the metric function and Bayes benchmark (Nidhi Prajapati) |
-| `R/ensemble.R` | EasyEnsemble, STAT 847 extension (Wadud Ambali) |
+| `R/ensemble.R` | EasyEnsemble, STAT 847 extension (Ambali Wadud) |
 | `analysis/` | scripts that run things and save results |
 | `results/` | saved `.rds` results, so the report never reruns the simulation |
 | `figures/` | saved plots |
@@ -29,9 +29,9 @@ class weights, threshold adjustment) improve *prediction*, or only the *metric*?
 
 | Person | Approach | Also owns |
 |---|---|---|
-| 1 | A. Resampling (over, under, SMOTE) | simulation generator |
-| 2 | B. Class weights | real-data pipeline |
-| 3 (STAT 847) | C. Threshold | evaluation + benchmark, EasyEnsemble |
+| John Anyanso | A. Resampling (over, under, SMOTE) | simulation generator |
+| Nidhi Prajapati | B. Class weights | real-data pipeline, evaluation + benchmark |
+| Ambali Wadud (STAT 847) | C. Threshold | EasyEnsemble |
 
 ## Function contract (do not change without telling the team)
 

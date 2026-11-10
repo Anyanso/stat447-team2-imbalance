@@ -1,7 +1,7 @@
 ---
 title: "Class Imbalance: Can Prediction Be Improved?"
 subtitle: "STAT 447/847 Course Project · Team 2 · November 2026"
-author: "Person 1 · Person 2 · Person 3"
+author: "John Anyanso · Nidhi Prajapati · Ambali Wadud"
 format:
   revealjs:
     slide-number: true
@@ -30,7 +30,7 @@ It catches **0** of the 492 frauds.
 :::
 
 ::: notes
-SPEAKER: Person 1.
+SPEAKER: John Anyanso.
 Open with the handout's example on the real Kaggle data: 0.17% of transactions are fraud,
 so a model that never flags anything is 99.83% accurate and completely useless.
 Accuracy rewards ignoring the rare class.
@@ -64,8 +64,8 @@ where we know the truth, then on the real fraud data.
 :::
 
 ::: notes
-SPEAKER: Person 1.
-Each remedy was owned by one team member: A Person 1, B Person 2, C Person 3.
+SPEAKER: John Anyanso.
+Each remedy was owned by one team member: A John Anyanso, B Nidhi Prajapati, C Ambali Wadud.
 "Improve prediction" means better ranking of frauds (ROC-AUC, PR-AUC);
 "improve the metric" means a higher sensitivity at some cutoff.
 :::
@@ -89,7 +89,7 @@ P(fraud | x) = logistic( β₀ + sep × (x₁ − x₂ + 0.5x₃ − 0.5x₄) )
 ::::
 
 ::: notes
-SPEAKER: Person 1.
+SPEAKER: John Anyanso.
 Logistic truth because the outcome is yes/no (Lecture 5) and the handout asks for it.
 Separation scales the slopes. n = 1,000 at 1% gives about 10 positives (small count);
 n = 20,000 at 1% gives 200 (small proportion, larger count).
@@ -106,7 +106,7 @@ Change from the baseline on the same data sets, 200 replicates per point, bars �
 :::
 
 ::: notes
-SPEAKER: Person 1.
+SPEAKER: John Anyanso.
 Change from the baseline on the same data sets (paired), bars ±2 MCSE.
 Every approach except forest class weights raises sensitivity, by up to +0.7.
 So by the metric, the remedies "work". Next slide: did prediction improve?
@@ -121,7 +121,7 @@ Change in ROC-AUC from the baseline on the same data sets, bars ±2 MCSE.
 :::
 
 ::: notes
-SPEAKER: Person 1.
+SPEAKER: John Anyanso.
 Logistic regression: ROC-AUC change is essentially zero for every remedy.
 Reason: when the logistic model is correct, rebalancing changes only the intercept,
 the same knob we used to create the imbalance, so the ranking cannot change.
@@ -138,7 +138,7 @@ Bayes (true-probability) PR-AUC minus method PR-AUC. Lower is better.
 :::
 
 ::: notes
-SPEAKER: Person 3.
+SPEAKER: Ambali Wadud.
 PR-AUC focuses on the rare class; its "random guess" value equals the prevalence.
 Gap = Bayes (true probabilities) minus method. No approach gets closer to the best possible
 than the baseline; resampling makes the forest's PR-AUC worse.
@@ -160,7 +160,7 @@ The threshold uses the same model as the baseline, so its line sits on the basel
 - The cutoff is chosen on out-of-fold / out-of-bag training predictions, **never the test set**
 
 ::: notes
-SPEAKER: Person 3.
+SPEAKER: Ambali Wadud.
 One replicate shown; the full simulation confirms the pattern.
 A cutoff t corresponds to a cost ratio (1 − t)/t (Lecture 6), so the threshold is the
 honest way to say "a missed fraud costs more than a false alarm".
@@ -175,7 +175,7 @@ Real data: mean paired change over 10 stratified 70/30 splits, bars ±2 SE.
 :::
 
 ::: notes
-SPEAKER: Person 2.
+SPEAKER: Nidhi Prajapati.
 Stratified 70/30 splits; Time and Amount standardized with training statistics.
 Logistic: ranking unchanged, PR-AUC drops for every resampling remedy (−0.05 to −0.19).
 Forest: SMOTE and over-sampling raise both ROC-AUC (to 0.983) and PR-AUC (+0.03).
@@ -192,7 +192,7 @@ Real data, mean over 10 splits, each method at its own cutoff.
 :::
 
 ::: notes
-SPEAKER: Person 2.
+SPEAKER: Nidhi Prajapati.
 Pushing sensitivity to about 90% drops precision to about 6% for every logistic remedy:
 about 15 false alarms for every real fraud.
 Forest + SMOTE is the best balance: 85% caught at 60% precision.
@@ -215,7 +215,7 @@ Forest + SMOTE is the best balance: 85% caught at 60% precision.
 3. **Our own set-up.** With 20,000 rows per tree, a baseline tree sees only about **34** frauds; after SMOTE, about **10,000**.
 
 ::: notes
-SPEAKER: Person 2.
+SPEAKER: Nidhi Prajapati.
 Point 3 is about our design, and we say so honestly: on real data, resampling also fixes
 a "too few frauds per tree" problem the simulated forests did not have.
 :::
@@ -236,7 +236,7 @@ a "too few frauds per tree" problem the simulated forests did not have.
 ::::
 
 ::: notes
-SPEAKER: Person 3.
+SPEAKER: Ambali Wadud.
 Forest: the ensemble beats the best single approach on ROC-AUC and balanced accuracy in
 11 of 12 imbalanced settings, and the gain grows as imbalance worsens (up to +0.03 at 1%).
 Logistic: never better; worse at 1%, n = 1,000, where each member sees only about 20 rows.
@@ -253,7 +253,7 @@ Each dot: one remedy × prevalence × classifier at n = 20,000. Dashed line = th
 :::
 
 ::: notes
-SPEAKER: Person 3 (or the team member who wrote it).
+SPEAKER: Ambali Wadud (who wrote the second implementation).
 Different packages (ranger, themis), partial rebalancing, nested CV, F1/F2 thresholds,
 a different ensemble. Reran from source: results at 20% and 50% reproduce to every digit.
 Same direction as ours in 91% of ROC-AUC and 78% of PR-AUC comparisons.

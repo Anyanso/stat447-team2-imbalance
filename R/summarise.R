@@ -1,5 +1,5 @@
 # =============================================================
-# summarise.R  --  OWNER: Person 1   (Step 6)
+# summarise.R  --  OWNER: John Anyanso   (Step 6)
 # Turn 20,800 raw result rows into averages WITH uncertainty.
 # Class simulation deck, S.7 Step 5 and Mistake 4:
 #   "every aggregate number needs a partner" -> mean and MCSE = sd / sqrt(B)
