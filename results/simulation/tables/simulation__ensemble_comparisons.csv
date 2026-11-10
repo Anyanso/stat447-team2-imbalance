@@ -5,3 +5,17 @@ Ensemble_minus_Single_AP,Bootstrap_CI_Lower,Bootstrap_CI_Upper,Bootstrap_Pr_Diff
 -0.0141474662816126,-0.0870704295704296,0.0161971193152385,0.15,200,sim_n2000_p01_rep01,Penalized_Logistic__baseline,Penalized_Logistic__baseline,Random_Forest__undersample,0.9
 -0.000412019751925841,-0.00142854378060876,0.00108976496624461,0.22,200,sim_n20000_p50_rep01,Penalized_Logistic__weighted,Penalized_Logistic__weighted,Random_Forest__baseline,0.9
 0.000318428532739112,-0.00196746521270157,0.00263248393239337,0.57,200,sim_n20000_p20_rep01,Penalized_Logistic__baseline,Penalized_Logistic__baseline,Random_Forest__undersample,0.9
+0.000197717397370567,-0.0039865651536072,0.00400893112808406,0.56,200,sim_n20000_p05_rep01,Penalized_Logistic__smote,Penalized_Logistic__smote,Random_Forest__baseline,0.9
+-0.0122514571000557,-0.0351408357663036,-0.00174890710404639,0.01,200,sim_n20000_p01_rep01,Penalized_Logistic__baseline,Penalized_Logistic__baseline,Random_Forest__undersample,0.9
+-0.00188069454708961,-0.00490310168030614,0.00161403556262693,0.19,200,sim_n2000_p50_rep02,Penalized_Logistic__weighted,Penalized_Logistic__weighted,Random_Forest__undersample,0.9
+-0.00341323304854801,-0.0128552998380451,0.00460104081257907,0.185,200,sim_n2000_p20_rep02,Penalized_Logistic__weighted,Penalized_Logistic__weighted,Random_Forest__smote,0.9
+0.018456979019785,-0.00295282383920264,0.0529925641585588,0.945,200,sim_n2000_p05_rep02,Penalized_Logistic__weighted,Penalized_Logistic__weighted,Random_Forest__undersample,0.9
+-0.000460170307498536,-0.00788600744957484,0.00340651990175667,0.45,200,sim_n2000_p01_rep02,Penalized_Logistic__baseline,Penalized_Logistic__baseline,Random_Forest__weighted,0.9
+0.000157925025356165,-0.000661215820269603,0.000982171557351164,0.63,200,sim_n20000_p50_rep02,Penalized_Logistic__baseline,Penalized_Logistic__baseline,Random_Forest__undersample,0.9
+-0.00156599407375968,-0.0039866578272652,0.0008994851787198,0.105,200,sim_n20000_p20_rep02,Penalized_Logistic__weighted,Penalized_Logistic__weighted,Random_Forest__smote,0.9
+0.0014325852807836,-0.00348991595507797,0.00684031753863421,0.67,200,sim_n20000_p05_rep02,Penalized_Logistic__undersample,Penalized_Logistic__undersample,Random_Forest__weighted,0.9
+-0.0137812037940488,-0.0397406033334652,0.0171215111586846,0.195,200,sim_n20000_p01_rep02,Penalized_Logistic__undersample,Penalized_Logistic__undersample,Random_Forest__baseline,0.8
+-0.001138660565279,-0.00414119413110313,0.0015430213812211,0.24,200,sim_n2000_p50_rep03,Penalized_Logistic__baseline,Penalized_Logistic__baseline,Random_Forest__oversample,0.9
+0.000301630355946325,-0.00843084310974258,0.00920403315713637,0.46,200,sim_n2000_p20_rep03,Penalized_Logistic__oversample,Penalized_Logistic__oversample,Random_Forest__oversample,0.9
+-0.0489809353852358,-0.0956728032125243,0.00206492854241509,0.03,200,sim_n2000_p05_rep03,Penalized_Logistic__smote,Penalized_Logistic__smote,Random_Forest__undersample,0.7
+-0.0317460317460317,-0.222222222222222,0.125,0.29,200,sim_n2000_p01_rep03,Penalized_Logistic__weighted,Penalized_Logistic__weighted,Random_Forest__baseline,0.9
