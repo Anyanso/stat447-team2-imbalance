@@ -12,16 +12,16 @@ List of 29
  $ ENSEMBLE_WEIGHTS       : num [1:9] 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9
  $ BOOTSTRAP_REPS         : int 200
  $ SAVE_OOF               : logi FALSE
- $ OUTPUT_DIR             : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/results/simulation"
- $ DATA_DIR               : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/data/simulation"
- $ PROJECT_ROOT           : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance"
- $ TABLE_DIR              : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/results/simulation/tables"
- $ METADATA_DIR           : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/results/simulation/metadata"
- $ GENERATED_DATA_DIR     : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/data/simulation/generated"
- $ DESIGN_DATA_DIR        : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/data/simulation/design"
- $ PLOT_EDA_DIR           : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/plots/simulation/eda"
- $ PLOT_FINAL_DIR         : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/plots/simulation/final"
- $ PLOT_CURVE_DIR         : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/plots/simulation/curves"
+ $ OUTPUT_DIR             : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simulation"
+ $ DATA_DIR               : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/data/simulation"
+ $ PROJECT_ROOT           : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance"
+ $ TABLE_DIR              : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simulation/tables"
+ $ METADATA_DIR           : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simulation/metadata"
+ $ GENERATED_DATA_DIR     : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/data/simulation/generated"
+ $ DESIGN_DATA_DIR        : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/data/simulation/design"
+ $ PLOT_EDA_DIR           : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/plots/simulation/eda"
+ $ PLOT_FINAL_DIR         : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/plots/simulation/final"
+ $ PLOT_CURVE_DIR         : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/plots/simulation/curves"
  $ SAVE_SIMULATED_DATA    : logi TRUE
  $ SAVE_TRUE_PROBABILITY  : logi FALSE
  $ SIM_PREVALENCES        : num [1:4] 0.5 0.2 0.05 0.01
