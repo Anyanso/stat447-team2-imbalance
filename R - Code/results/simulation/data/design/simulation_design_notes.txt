@@ -1,0 +1,4 @@
+Data-generating model: Bernoulli(expit(beta0 + 1.25*X1 - 1.0*X2 + 0.8*X3 + 0*X4))
+Predictors X1-X4: independent standard normal
+Intercept calibrated for each target prevalence
+The population model and slopes stay constant across scenarios.
