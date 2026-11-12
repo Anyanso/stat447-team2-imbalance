@@ -10,7 +10,7 @@ cfg <- make_settings()
 # EDIT THIS LOCATION if the original creditcard.csv is not in Downloads.
 # You may also set the environment variable STAT847_FRAUD_CSV before running.
 csv_file <- Sys.getenv("STAT847_FRAUD_CSV",
-                       unset = "C:/Users/HP/Downloads/creditcard.csv")
+                       unset = "data/creditcard.csv")
 
 sim_folder <- file.path(getwd(), "results", "simulation")
 fraud_folder <- file.path(sim_folder, "fraud_real_data")
