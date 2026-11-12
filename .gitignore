@@ -30,3 +30,9 @@ results/real_pilot_chunks/
 results/real_pilot_results.rds
 results/ens_sim_chunks/
 results/ens_real_chunks/
+
+# Wadud's robustness check: copies of the Kaggle data and the large
+# held-out prediction files his script writes (all re-created by running it)
+results/simulation/fraud_real_data/data/
+results/simulation/fraud_real_data/tables/*heldout_predictions.csv
+results/simulation/fraud_real_data/tables/*_partial.csv

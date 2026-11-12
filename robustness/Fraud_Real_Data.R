@@ -39,10 +39,7 @@ CONFIG$PROJECT_ROOT <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
 # IMPORTANT: This points to the CSV you already downloaded. No Kaggle CLI/API.
 # For example: "data/creditcard.csv" (forward slashes in R).
 # Change this one setting if your dataset is elsewhere.
-CONFIG$LOCAL_CSV <- file.path(Sys.getenv("USERPROFILE"), "Downloads", "creditcard.csv")
-if (!nzchar(Sys.getenv("USERPROFILE"))) {
-  CONFIG$LOCAL_CSV <- "data/creditcard.csv"
-}
+CONFIG$LOCAL_CSV <- "data/creditcard.csv"
 
 # A self-contained named subfolder of the SIMULATION results directory.
 # It cannot overwrite simulation tables or plots.
