@@ -1,0 +1,10 @@
+Logistic_Weight,RF_Weight,CV_AP,Experiment,Selected_Weight,Selected_Logistic,Selected_Forest
+0.1,0.9,0.855002443452954,fraud_chronological_holdout,0.2,Penalized_Logistic__weighted,Random_Forest__smote
+0.2,0.8,0.855036519898927,fraud_chronological_holdout,0.2,Penalized_Logistic__weighted,Random_Forest__smote
+0.3,0.7,0.854267651152748,fraud_chronological_holdout,0.2,Penalized_Logistic__weighted,Random_Forest__smote
+0.4,0.6,0.852627717769893,fraud_chronological_holdout,0.2,Penalized_Logistic__weighted,Random_Forest__smote
+0.5,0.5,0.850160747852809,fraud_chronological_holdout,0.2,Penalized_Logistic__weighted,Random_Forest__smote
+0.6,0.4,0.846896299209247,fraud_chronological_holdout,0.2,Penalized_Logistic__weighted,Random_Forest__smote
+0.7,0.3,0.842686173007377,fraud_chronological_holdout,0.2,Penalized_Logistic__weighted,Random_Forest__smote
+0.8,0.2,0.835704768474075,fraud_chronological_holdout,0.2,Penalized_Logistic__weighted,Random_Forest__smote
+0.9,0.1,0.824759259216705,fraud_chronological_holdout,0.2,Penalized_Logistic__weighted,Random_Forest__smote

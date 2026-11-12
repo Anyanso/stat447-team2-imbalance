@@ -1,0 +1,11 @@
+Model,Finished_At
+Penalized_Logistic__baseline,2026-11-11 20:28:32.658501
+Penalized_Logistic__oversample,2026-11-11 20:30:42.805049
+Penalized_Logistic__undersample,2026-11-11 20:30:52.779901
+Penalized_Logistic__smote,2026-11-11 20:32:22.970602
+Penalized_Logistic__weighted,2026-11-11 20:33:16.069963
+Random_Forest__baseline,2026-11-11 20:54:57.409341
+Random_Forest__oversample,2026-11-11 21:02:34.587039
+Random_Forest__undersample,2026-11-11 21:02:44.264242
+Random_Forest__smote,2026-11-11 21:13:54.436219
+Random_Forest__weighted,2026-11-11 21:19:29.369478

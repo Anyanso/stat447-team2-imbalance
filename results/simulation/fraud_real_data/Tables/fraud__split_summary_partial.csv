@@ -1,0 +1,3 @@
+Experiment,Train_N,Test_N,Train_Positives,Test_Positives,Train_Prevalence,Test_Prevalence,Chronological_Boundary
+fraud_stratified_random,226980,56746,378,95,0.00166534496431404,0.00167412681070031,
+fraud_chronological_holdout,226980,56746,399,74,0.00175786412899815,0.00130405667359814,145233
