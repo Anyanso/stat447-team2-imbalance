@@ -1,0 +1,9 @@
+Experiment,Actual,Predicted,Count,Selected_Model
+fraud_chronological_holdout,Fraud,Fraud,53,Ensemble / CV_optimized_blend
+fraud_chronological_holdout,Legitimate,Legitimate,56671,Ensemble / CV_optimized_blend
+fraud_chronological_holdout,Fraud,Legitimate,21,Ensemble / CV_optimized_blend
+fraud_chronological_holdout,Legitimate,Fraud,1,Ensemble / CV_optimized_blend
+fraud_stratified_random,Fraud,Fraud,76,Ensemble / CV_optimized_blend
+fraud_stratified_random,Legitimate,Legitimate,56640,Ensemble / CV_optimized_blend
+fraud_stratified_random,Fraud,Legitimate,19,Ensemble / CV_optimized_blend
+fraud_stratified_random,Legitimate,Fraud,11,Ensemble / CV_optimized_blend
