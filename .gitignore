@@ -1,6 +1,28 @@
 # --- Data: never commit the Kaggle CSV (about 150 MB) ---
 data/*.csv
 
+
+# Generated datasets
+data/simulation/
+*.csv.gz
+*.csv
+*.rds
+
+# RStudio temporary files
+.Rhistory
+.RData
+.Rproj.user/
+
+# Generated datasets
+*.csv
+*.csv.gz
+*.rds
+*.RData
+
+# RStudio files
+.Rhistory
+.Rproj.user/
+
 # --- R / RStudio ---
 .Rhistory
 .RData
