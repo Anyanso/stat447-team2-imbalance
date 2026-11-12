@@ -1,0 +1,35 @@
+List of 34
+ $ SEED                   : int 847
+ $ TEST_FRACTION          : num 0.2
+ $ CV_FOLDS               : int 5
+ $ INNER_GLMNET_FOLDS     : int 3
+ $ RIDGE_LAMBDAS          : num [1:4] 0.005 0.02 0.08 0.32
+ $ RF_TREES               : int 150
+ $ RF_THREADS             : int 1
+ $ TARGET_OVER_RATIO      : num 0.25
+ $ UNDER_MAJ_TO_MIN       : int 4
+ $ POS_CLASS_WEIGHT       : chr "sqrt"
+ $ ENSEMBLE_WEIGHTS       : num [1:9] 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9
+ $ BOOTSTRAP_REPS         : int 200
+ $ SAVE_OOF               : logi TRUE
+ $ OUTPUT_DIR             : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simul"| __truncated__
+ $ DATA_DIR               : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simul"| __truncated__
+ $ PROJECT_ROOT_OVERRIDE  : chr ""
+ $ RUN_MODE               : chr "full"
+ $ PROJECT_ROOT           : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance"
+ $ LOCAL_CSV              : chr "C:/Users/HP/Downloads/creditcard.csv"
+ $ TABLE_DIR              : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simul"| __truncated__
+ $ METADATA_DIR           : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simul"| __truncated__
+ $ PROCESSED_DATA_DIR     : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simul"| __truncated__
+ $ SPLIT_DIR              : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simul"| __truncated__
+ $ PRED_DIR               : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simul"| __truncated__
+ $ PLOT_EDA_DIR           : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simul"| __truncated__
+ $ PLOT_FINAL_DIR         : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simul"| __truncated__
+ $ PLOT_CURVE_DIR         : chr "C:/Users/HP/OneDrive/Documents/STAT847_Team2_Data/stat447-team2-imbalance/stat447-team2-imbalance/results/simul"| __truncated__
+ $ SAVE_PROCESSED_DATA    : logi TRUE
+ $ SAVE_SPLIT_DATA        : logi TRUE
+ $ SAVE_ALL_PREDICTIONS   : logi TRUE
+ $ SAVE_RAW_COPY          : logi TRUE
+ $ RUN_RANDOM_SPLIT       : logi TRUE
+ $ RUN_CHRONOLOGICAL_SPLIT: logi TRUE
+ $ REMOVE_EXACT_DUPLICATES: logi TRUE
