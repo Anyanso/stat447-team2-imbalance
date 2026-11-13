@@ -21,7 +21,7 @@ FIGURES_DIR  <- if (exists("FIGURES_DIR_OVERRIDE")) FIGURES_DIR_OVERRIDE else "f
 
 # Study settings -- change them here and nowhere else
 PREVALENCES <- c(0.50, 0.20, 0.05, 0.01)   # share of positives
-SAMPLE_SIZES <- c(1000, 20000, 100000)     # training set sizes
+SAMPLE_SIZES <- c(1000, 20000)             # training set sizes
 SEPARATION  <- c(low = 0.5, high = 1.5)    # multiplies the true slopes
 N_REPS      <- 100                         # replicates per setting
 N_TEST      <- 20000                       # size of each fresh test set
