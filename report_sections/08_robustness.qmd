@@ -1,0 +1,75 @@
+<!-- Owner: Ambali Wadud. Wadud writes this section; the text below is a
+     starting draft with the numbers we already have, for him to replace or
+     extend. His code is in robustness/ and his results in results/simulation/. -->
+
+# Robustness check: an independent second implementation {#sec-robust}
+
+A simulation study can only be trusted as far as its code. To check that our
+conclusions do not depend on our particular implementation, one of us wrote
+a second version of the whole study independently, with
+different packages and several different design choices
+(@tbl-robust-design). The code is in the `robustness/` folder of the
+repository.
+
+| | Main study | Second implementation |
+|---|---|---|
+| Logistic model | lasso (`glmnet`, 10-fold CV) | ridge (`glmnet`, nested CV) |
+| Random forest | `randomForest` | `ranger` |
+| SMOTE | our own function | `themis::smote` |
+| Rebalancing | to 50:50 | partial (25% positives, 4:1, square-root weights) |
+| Threshold rule | Youden | $F_1$ / $F_2$ |
+| Simulation replicates | 100 per setting | 3 per setting |
+| Real-data test sets | 10 random stratified splits | 1 random and 1 time-ordered split |
+| Extra measures | | Brier score, log-loss |
+
+: How the two implementations differ. {#tbl-robust-design}
+
+**Simulation.** @fig-agree compares the change from baseline in the two
+studies for every remedy, prevalence and classifier at $n = 20{,}000$, the
+size at which both have enough test positives. The two studies agree on the
+direction of the change (treating changes under 0.005 as "no change") in 91%
+of the ROC-AUC comparisons and 78% of the PR-AUC comparisons. Every lasso
+point sits at the origin: both studies find that rebalancing does not change
+the lasso's ranking. The forest points mostly fall in the same quadrant (both
+studies find that resampling lowers the forest's PR-AUC), with smaller drops
+in the second study, which rebalances only part of the way. We reran the
+second implementation from its source code; its results at 20% and 50%
+prevalence reproduced to every digit. With only 3 replicates per setting it
+is a check on our conclusions, not a source of new findings.
+
+![Change from baseline in the main study (x-axis) against the second implementation (y-axis), one point per remedy, prevalence and classifier at n = 20,000. Points on the dashed line agree exactly.](figures/fig8b_agreement.png){#fig-agree width=75%}
+
+**Real data.** The second implementation's real-data results point the same
+way as ours (@tbl-robust-real). For logistic regression, under-sampling
+loses the most PR-AUC in both studies, and no remedy changes ROC-AUC by more
+than 0.01. For the forest, SMOTE improves both ROC-AUC and PR-AUC on all three
+test designs, and under-sampling improves ROC-AUC while lowering PR-AUC. The
+one disagreement is logistic over-sampling, SMOTE and weights on the second
+study's random split, where PR-AUC rises by about 0.01 instead of falling. On
+its time-ordered split they fall, as in ours, so we read this as the noise of a
+single split (148 frauds) rather than a real difference.
+
+| Remedy | PR-AUC change: ours / random / time-ordered | ROC-AUC change: ours / random / time-ordered |
+|---|---|---|
+| Logistic over-sampling | $-0.047$ / $+0.013$ / $-0.044$ | $+0.002$ / $-0.006$ / $+0.005$ |
+| Logistic SMOTE | $-0.051$ / $+0.011$ / $-0.058$ | $0.000$ / $-0.007$ / $+0.005$ |
+| Logistic weights | $-0.070$ / $+0.010$ / $-0.018$ | $+0.002$ / $-0.002$ / $+0.006$ |
+| Logistic under-sampling | $-0.190$ / $-0.053$ / $-0.141$ | $0.000$ / $-0.001$ / $+0.006$ |
+| Forest SMOTE | $+0.031$ / $+0.017$ / $+0.027$ | $+0.034$ / $+0.033$ / $+0.024$ |
+| Forest over-sampling | $+0.022$ / $-0.002$ / $+0.012$ | $+0.028$ / $+0.006$ / $+0.002$ |
+| Forest under-sampling | $-0.060$ / $-0.121$ / $-0.005$ | $+0.028$ / $+0.024$ / $+0.030$ |
+| Forest weights | $-0.022$ / $-0.003$ / $-0.001$ | $-0.004$ / $-0.005$ / $+0.007$ |
+
+: Real data, change from each study's own baseline: our 10-split mean, and the second implementation's random and time-ordered splits. {#tbl-robust-real}
+
+The second study also tried a blended ensemble of its models, which gained
+only 0.001 to 0.002 PR-AUC, with confidence intervals that include zero.
+With $F_1$-tuned cutoffs, most of its methods reach about 80% sensitivity at
+80 to 90% precision, which agrees with our finding that a well-chosen cutoff
+on a good model does as well as rebalancing.
+
+**Conclusion of the check.** Two implementations written separately, with
+different packages, tuning and rebalancing, reach the same conclusions: for
+logistic regression the remedies move the operating point and not the
+ranking, and for forests resampling can help ROC-AUC while hurting PR-AUC in
+simulation, with SMOTE helping on the real data.

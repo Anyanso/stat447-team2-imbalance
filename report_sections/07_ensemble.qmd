@@ -1,0 +1,113 @@
+<!-- Owner: Ambali Wadud (STAT 847). First draft written from our results;
+     Wadud to review, rewrite in his own words and extend. -->
+
+# STAT 847 extension: EasyEnsemble {#sec-ensemble}
+
+## Idea and implementation
+
+Under-sampling was the only remedy that clearly improved the forest's ROC-AUC
+in the simulation, but it throws away most of the data: at 1% prevalence it
+keeps about 2% of the training rows. EasyEnsemble [@liu2009] keeps the
+benefit and recovers the waste. It draws $B$ different under-sampled training
+sets, each with all the positives and a *different* random set of negatives,
+fits a model to each, and averages their predicted probabilities. Each member
+trains on balanced data, and together the members see most of the negatives.
+This is the "combine weak learners into a stronger one" idea from the
+ensemble-learning part of the course (learning objective 6 for STAT 847):
+each under-sampled model is noisy, and averaging reduces that noise, as
+bagging does for trees [@islr2, Section 8.2.1].
+
+Our implementation (`R/ensemble.R`) uses $B = 10$ members and the same two
+classifiers as the rest of the study, so the comparison is fair. The original
+paper uses boosting inside each member; we did not, so that any difference
+comes from the ensembling and not from a new learner. For the forest, each
+member has 20 trees, so the ensemble has the same 200 trees in total as a
+single forest. The members are trained on 50:50 data, so we classify at 0.5.
+The ensemble is run on exactly the same simulated data sets and real-data
+splits as the other methods (its seeds continue after the twelve methods'
+seeds), so we can compare it replicate by replicate.
+
+**What to compare with.** A new method should beat the best existing one, not
+the baseline. In every setting we compared the ensemble with the *best*
+single approach for that classifier and measure, chosen as the one with the
+highest mean in that setting. Choosing the best after seeing the results
+favours the single approach, so this comparison is conservative for the
+ensemble. As before, we count a difference only if it exceeds 2 MCSE and
+0.005.
+
+## Results
+
+```{r}
+#| label: tbl-ens-count
+#| tbl-cap: "EasyEnsemble against the best single approach in each of the 12 imbalanced simulation settings (prevalence 20%, 5% or 1%), counted only if the difference exceeds 2 MCSE and 0.005."
+es <- read.csv("results/table_ensemble_sim.csv")
+es <- es[es$prev < 0.5, ]
+es$verdict <- ifelse(grepl("negligible|no clear", es$verdict), "no real difference", es$verdict)
+es$metric <- c(roc.auc = "ROC-AUC", pr.auc = "PR-AUC", bal.accuracy = "Balanced accuracy")[es$metric]
+es$classifier <- ifelse(es$classifier == "logistic", "Lasso logistic", "Random forest")
+ct <- as.data.frame.matrix(table(paste(es$classifier, "|", es$metric),
+                                 factor(es$verdict, levels = c("ensemble better",
+                                        "no real difference", "best single better"))))
+ct <- cbind(Classifier = sub(" \\|.*", "", rownames(ct)),
+            Measure = sub(".*\\| ", "", rownames(ct)), ct)
+names(ct)[3:5] <- c("Ensemble better", "No real difference", "Best single better")
+kable(ct, booktabs = TRUE, row.names = FALSE, align = "llccc")
+```
+
+@fig-ens shows the size of the differences and @tbl-ens-count counts them.
+
+![EasyEnsemble minus the best single approach in each setting, paired on the same data sets and pooled over separation (200 replicates per point), bars $\pm 2$ MCSE. Above zero means the ensemble is better.](figures/fig7_ensemble_vs_best.png){#fig-ens width=85%}
+
+**Forests: a consistent gain in ROC-AUC and balanced accuracy.** For the
+random forest the ensemble beats the best single approach on ROC-AUC in 11 of
+the 12 imbalanced settings, and on balanced accuracy in 11 of 12. The gain
+grows as positives become rarer, up to about 0.03 at 1% prevalence and
+$n = 1{,}000$. This fits our explanation of why under-sampling helps a forest
+(@sec-sim-rank): each member breaks the ties of the baseline forest, and
+averaging ten members trained on different negatives removes much of the
+noise that a single under-sampled forest suffers from.
+
+**PR-AUC: mixed.** For PR-AUC the ensemble is better in some forest settings
+and worse in others, and at 1% prevalence and $n = 20{,}000$ it loses about
+0.015 to the best single approach. Like under-sampling, it gives high
+probabilities to many negatives, which hurts precision at the top of the
+ranking.
+
+**Lasso: no gain.** For the lasso the ensemble is never better than the best
+single approach and is worse at 1% prevalence and $n = 1{,}000$, where each
+member is fitted to only about 20 rows. This is what we should expect. The
+lasso is a stable, low-variance method, and here a correct one, so there is
+little variance for averaging to remove, while each member pays the full cost
+of under-sampling.
+
+**Real data.** @tbl-ens-real compares the ensemble with the best single
+approach on the credit card data.
+
+```{r}
+#| label: tbl-ens-real
+#| tbl-cap: "Real data: EasyEnsemble against the best single approach for each classifier and measure, mean over 10 splits (SE of the paired difference)."
+er <- read.csv("results/table_ensemble_real.csv")
+er$metric <- c(roc.auc = "ROC-AUC", pr.auc = "PR-AUC", bal.accuracy = "Balanced accuracy")[er$metric]
+er$classifier <- ifelse(er$classifier == "logistic", "Lasso logistic", "Random forest")
+er$best.approach <- c(oversample = "Over-sampling", smote = "SMOTE", threshold = "Threshold",
+                      undersample = "Under-sampling", baseline = "Baseline",
+                      weights = "Class weights")[er$best.approach]
+names(er) <- c("Measure", "Classifier", "Best single approach", "EasyEnsemble",
+               "Best single", "Difference")
+kable(er, booktabs = TRUE, row.names = FALSE, align = "lllrrr")
+```
+
+On the real data the ensemble ties with the best single approach on ROC-AUC
+and balanced accuracy, and loses about 0.08 PR-AUC to the best single
+approach for both classifiers. So the ensemble does not rescue the lasso's
+PR-AUC on real data, and it does not beat forest + SMOTE.
+
+## What we learned
+
+EasyEnsemble helps the learner that needs it: an unstable, flexible model
+facing very few positives. There, averaging several under-sampled models
+improves the ranking beyond any single remedy. It does not help a stable and
+correctly specified model, and it inherits under-sampling's weakness on
+PR-AUC and calibration. In line with the rest of the report, it changes the
+forest's ranking for the better but, for the lasso, it is one more way to move
+the operating point.

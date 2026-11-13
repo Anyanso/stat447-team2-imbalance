@@ -1,0 +1,122 @@
+<!-- Appendix: full tables; code listings are generated from R/ -->
+
+# Full results tables {#sec-app-tables}
+
+\begingroup\footnotesize
+
+```{r}
+#| label: tbl-app-change
+#| tbl-cap: "Simulation: mean change from the baseline on the same data sets, pooled over separation (200 replicates); MCSE in brackets."
+ch <- read.csv("results/table_change_vs_baseline.csv", check.names = FALSE)
+ch$classifier <- ifelse(ch$classifier == "logistic", "Lasso", "Forest")
+ch$approach <- c(oversample = "Over-sampling", undersample = "Under-sampling", smote = "SMOTE",
+                 weights = "Class weights", threshold = "Threshold")[ch$approach]
+ch$metric <- c(roc.auc = "ROC-AUC", sensitivity = "Sensitivity")[ch$metric]
+ch$n <- format(ch$n, big.mark = ",")
+ch <- ch[order(ch$metric, ch$classifier != "Lasso", ch$approach, ch$n), ]
+ch <- ch[, c("metric", "classifier", "approach", "n", "prev 0.01", "prev 0.05", "prev 0.2", "prev 0.5")]
+names(ch) <- c("Measure", "Classifier", "Approach", "n", "1%", "5%", "20%", "50%")
+kable(ch, booktabs = TRUE, row.names = FALSE, align = "lllrrrrr", longtable = TRUE)
+```
+
+```{r}
+#| label: tbl-app-ens
+#| tbl-cap: "EasyEnsemble minus the best single approach in each simulation setting (MCSE in brackets)."
+ens <- read.csv("results/table_ensemble_sim.csv")
+ens$metric <- c(roc.auc = "ROC-AUC", pr.auc = "PR-AUC", bal.accuracy = "Bal. acc.")[ens$metric]
+ens$classifier <- ifelse(ens$classifier == "logistic", "Lasso", "Forest")
+ens$n <- format(ens$n, big.mark = ",")
+ens$prev <- pct(ens$prev)
+names(ens) <- c("Measure", "Classifier", "n", "Separation", "Prevalence", "Best single",
+                "Difference", "Verdict")
+kable(ens, booktabs = TRUE, row.names = FALSE, longtable = TRUE)
+```
+
+\endgroup
+
+# Code {#sec-app-code}
+
+The analysis scripts are run in this order (each starts with
+`source("R/00_setup.R")`):
+
+| Script | What it does |
+|---|---|
+| `00_check_setup.R` | checks packages and the data file |
+| `01_check_gen_data.R` | sanity checks of the generator |
+| `02_design_grid.R` | finds the intercepts and builds the design (1,600 rows) |
+| `03_check_approaches.R`, `04_check_evaluate.R` | small tests of the remedies and metrics |
+| `05_run_simulation.R` | runs the simulation in parallel, saves `sim_results.rds` |
+| `06_summarise_simulation.R` | MCSE summaries, paired changes, @fig-sens, @fig-roc, @fig-gap |
+| `07_run_real_data.R` | the 10 real-data splits, saves `real_results.rds` |
+| `08_reconcile.R` | real-data summaries, @fig-real, @fig-tradeoff |
+| `08b_compare_wadud.R` | comparison with the second implementation, @fig-agree |
+| `09_run_ensemble.R`, `09b_summarise_ensemble.R` | EasyEnsemble runs and summaries, @fig-ens |
+| `10_slide_figures.R` | larger-text copies of the figures for the slides |
+| `11_calibration.R` | calibration check, @tbl-calib |
+| `12_eda.R` | exploratory plots, @fig-simprob and @fig-ccdata |
+
+The functions they use are listed below.
+
+## `R/00_setup.R`
+
+```{r}
+#| echo: true
+#| eval: false
+#| file: R/00_setup.R
+```
+
+## `R/gen_data.R`
+
+```{r}
+#| echo: true
+#| eval: false
+#| file: R/gen_data.R
+```
+
+## `R/design.R`
+
+```{r}
+#| echo: true
+#| eval: false
+#| file: R/design.R
+```
+
+## `R/approaches.R`
+
+```{r}
+#| echo: true
+#| eval: false
+#| file: R/approaches.R
+```
+
+## `R/evaluate.R`
+
+```{r}
+#| echo: true
+#| eval: false
+#| file: R/evaluate.R
+```
+
+## `R/run_one.R`
+
+```{r}
+#| echo: true
+#| eval: false
+#| file: R/run_one.R
+```
+
+## `R/real_data.R`
+
+```{r}
+#| echo: true
+#| eval: false
+#| file: R/real_data.R
+```
+
+## `R/ensemble.R`
+
+```{r}
+#| echo: true
+#| eval: false
+#| file: R/ensemble.R
+```

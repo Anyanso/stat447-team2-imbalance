@@ -1,0 +1,180 @@
+<!-- Data section: simulated data, credit card data, and a first look at each -->
+
+# Data {#sec-data}
+
+## Simulated data {#sec-simdata}
+
+We built the simulation the way the course's simulation deck recommends: one
+function, `gen_data()`, takes as arguments exactly the factors we vary, and
+the true model is fixed inside it.
+
+Each simulated data set has five predictors $x_1, \dots, x_5$, drawn
+independently from $N(0, 1)$. The outcome comes from a logistic model
+[@islr2, eq. 4.2]:
+
+$$
+P(y = 1 \mid x) = \frac{e^{\eta}}{1 + e^{\eta}}, \qquad
+\eta = \beta_0 + s\,(x_1 - x_2 + 0.5\,x_3 - 0.5\,x_4 + 0\cdot x_5).
+$$
+
+The multiplier $s$ controls *separation*. A larger $s$ means larger slopes,
+so the two classes overlap less and the problem is easier. The fifth
+predictor has a slope of zero, so it is pure noise and gives the lasso
+something to remove. For every row we also keep the true probability
+$P(y = 1 \mid x)$, stored as `p.true`. The models never see it; we use it only
+for the Bayes benchmark described in @sec-metrics.
+
+To make the positive class rare we lower the intercept $\beta_0$ and leave
+the slopes alone. This keeps "rarer" separate from "harder": at a given
+separation, the relationship between the predictors and the log-odds is the
+same at every prevalence. For each prevalence $\pi$ and separation $s$ we
+need the $\beta_0$ that makes the average of $P(y = 1 \mid x)$ equal to $\pi$.
+Since $x^\top\beta$ is normal with mean 0 and variance $s^2 \sum_j \beta_j^2$,
+we approximated that average with $10^6$ normal draws and solved for
+$\beta_0$ by bisection. The intercepts were computed once, after
+`set.seed(447)`, and saved, so every replicate uses the same truth
+(@tbl-beta0).
+
+```{r}
+#| label: tbl-beta0
+#| tbl-cap: "True intercepts used in the simulation. The slopes are the same in every column of a row."
+b <- beta0
+b$prev.lab <- pct(b$prev)
+w <- reshape(b[, c("prev.lab", "sep.level", "beta0")], idvar = "sep.level",
+             timevar = "prev.lab", direction = "wide")
+names(w) <- sub("beta0.", "", names(w))
+w$sep.level <- ifelse(w$sep.level == "low", "Low (s = 0.5)", "High (s = 1.5)")
+names(w)[1] <- "Separation"
+w[, -1] <- lapply(w[, -1], function(v) sprintf("%.2f", v))
+kable(w, booktabs = TRUE, align = "lrrrr")
+```
+
+We varied three factors: prevalence $\pi$ (50%, 20%, 5% and 1%), training-set
+size $n$ (1,000 and 20,000) and separation $s$ (0.5 and 1.5), which gives
+$4 \times 2 \times 2 = 16$ settings. Each setting has $B = 100$ replicates,
+so 1,600 training sets in all, enough for Monte Carlo errors small enough to
+detect differences of 0.005. Each replicate also gets its own fresh test set
+of 20,000 rows from the same model. The test set is used only to score the
+final predictions, never for tuning.
+
+The two sample sizes were chosen deliberately. At 1% prevalence,
+$n = 1{,}000$ gives about 10 positives, few in *number*, while
+$n = 20{,}000$ gives about 200: the same small *proportion*, but enough to
+learn from. Comparing the two tells us whether a remedy is fixing a shortage
+of positives or a lack of balance.
+
+The seed is 447, set once in `R/00_setup.R`. Row $i$ of the design gets seed
+$447 + i$, and method $j$ within that replicate gets seed $100(447 + i) + j$.
+So all twelve methods (two classifiers, six approaches each) see exactly the
+same training and test data in a given replicate, which lets us compare them
+replicate by replicate. It also means the results do not depend on the order
+in which the methods are run or on how many processor cores are used.
+
+## A first look at the simulated data {#sec-simeda}
+
+@fig-simdata plots simulated data from every setting. Because the slopes are
+fixed, the positives always sit in the same direction, towards large values
+of $x_1 - x_2$. Lowering the intercept does not move them; it just leaves
+fewer of them. With low separation the two classes are mixed together even
+when they are balanced.
+
+![Simulated data in each setting, 3,000 points per panel. Positives (orange) always lie in the same direction; at lower prevalence there are simply fewer of them. Low separation (bottom row) mixes the classes more.](figures/fig1_simulated_imbalance.png){#fig-simdata width=88%}
+
+@fig-simprob looks at the same data through the true probabilities, and it
+shows why the 0.5 cutoff fails. At 50% prevalence about half of all cases
+have a true probability above 0.5. At 1% prevalence and high separation only
+0.14% of cases do, and even among the actual positives only about 10% have a
+true probability above 0.5. With low separation the share is zero. In other
+words, at low prevalence even a *perfect* model that knew the true
+probabilities would almost never flag anything at a cutoff of 0.5. Low
+sensitivity at that cutoff is a property of the cutoff, not a sign that the
+model is broken, and that idea runs through the rest of the report.
+
+![Distribution of the true probability $P(y = 1 \mid x)$ in 20,000 simulated cases per setting. The dashed line is the usual 0.5 cutoff. As positives become rarer, nearly every case falls below it.](figures/fig9_eda_simulated.png){#fig-simprob width=88%}
+
+Before running the study we also checked that the generator produced what we
+asked for (@tbl-sanity). In every setting the training prevalence, averaged
+over replicates, is within 0.002 of the target. The smallest training set had
+only 3 positives (1%, $n = 1{,}000$, low separation), which is exactly the
+kind of situation in which people reach for a remedy. The table also gives the
+Bayes benchmark, the ROC-AUC and PR-AUC of the true probabilities, which is
+the best any method can do. ROC-AUC hardly changes with prevalence, but PR-AUC
+drops sharply as positives become rare, which is why we report both measures.
+
+```{r}
+#| label: tbl-sanity
+#| tbl-cap: "Generator check: observed training prevalence (mean over 100 replicates) and the Bayes benchmark (mean over both sample sizes)."
+bay <- sim[sim$approach == "bayes", ]
+bay$obs.prev <- bay$train.positives / bay$n
+op <- aggregate(obs.prev ~ prev + sep.level + n, bay, mean)
+op <- reshape(op, idvar = c("prev", "sep.level"), timevar = "n", direction = "wide")
+fp <- aggregate(train.positives ~ prev + sep.level, bay[bay$n == 1000, ], min)
+ba <- aggregate(cbind(roc.auc, pr.auc) ~ prev + sep.level, bay, mean)
+s <- merge(merge(op, fp), ba)
+s <- s[order(-s$prev, s$sep.level), ]
+out <- data.frame(Target = pct(s$prev),
+                  Separation = s$sep.level,
+                  `Observed, n = 1,000` = sprintf("%.4f", s$obs.prev.1000),
+                  `Observed, n = 20,000` = sprintf("%.4f", s$obs.prev.20000),
+                  `Fewest positives (n = 1,000)` = s$train.positives,
+                  `Bayes ROC-AUC` = f3(s$roc.auc),
+                  `Bayes PR-AUC` = f3(s$pr.auc),
+                  check.names = FALSE)
+kable(out, booktabs = TRUE, row.names = FALSE, align = "llrrrrr")
+```
+
+## Real data: credit card fraud {#sec-realdata}
+
+The real data are the Kaggle "Credit Card Fraud Detection" data, released by
+the Machine Learning Group of the Université Libre de Bruxelles with
+@dalpozzolo2015 and available at
+<https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud>. They contain
+284,807 card transactions made by European cardholders over two days in
+September 2013; 492 of them (0.173%) are fraud. There are 30 predictors.
+`V1` to `V28` are principal components that the data owners computed to
+protect confidentiality, so they have no direct meaning. `Time` is the number
+of seconds since the first transaction and `Amount` is the transaction
+amount. There are no missing values. The file is about 150 MB, so it is not
+stored on GitHub; the repository's README explains where to download it.
+
+We made 10 random 70/30 train/test splits. Each split is stratified, meaning
+frauds and normal transactions are sampled separately, so every training set
+has 344 frauds and every test set has 148. `Time` and `Amount` are on much
+larger scales than the principal components and would dominate the distances
+that SMOTE uses, so we standardized them with the training-set mean and
+standard deviation (applied to both halves). The principal components were
+left as supplied. Split $k$ uses seed $447 + 10{,}000 + k$, and methods within
+a split are seeded as in the simulation, so every method sees the same splits.
+
+Two practical problems came up. First, `cv.glmnet()` did not converge at the
+smallest values of its default $\lambda$ path, which runs down to $10^{-4}$
+times the largest $\lambda$, where the fit is almost unpenalized. We used a
+shorter, finer path of 200 values ending at $10^{-3}$ times the largest
+$\lambda$. Second, a random forest with 200 trees on about 199,000 training
+rows is slow, so each tree was grown on a sample of 20,000 rows instead of a
+full bootstrap sample. This choice turns out to matter, and we come back to it
+in @sec-reconcile.
+
+## A first look at the credit card data {#sec-realeda}
+
+Because the principal components cannot be interpreted, we explored the two
+predictors that can, `Amount` and `Time` (@fig-ccdata). Panel A shows that
+frauds are not simply large transactions. The median fraud is \$9.25 against
+\$22.00 for a normal transaction, half of all frauds are under \$10, and 5.5%
+of frauds are for \$0, compared with 0.6% of normal transactions. One
+possible explanation is that a stolen card is first tried with a small
+charge before it is used for larger ones. Frauds are also spread over the whole range of amounts, so
+amount alone cannot separate the classes.
+
+Panel B shows transactions per hour (grey bars) and the fraud rate in each
+hour (orange). Activity follows a clear daily cycle, from about 1,100
+transactions an hour at night to almost 10,000 during the day. The fraud
+rate is highest at night, reaching 1.3% and 2.1% in two night-time hours,
+compared with 0.17% overall, because fraud continues while normal spending
+stops. So the level of imbalance is not even constant within the data: it
+depends on when a transaction happens. Among the principal components, the
+ones most correlated with fraud are `V17`, `V14`, `V12` and `V10` (correlations
+between $-0.22$ and $-0.33$), so the information about fraud is spread across
+several components rather than concentrated in one.
+
+![Credit card data. A: distribution of transaction amount by class (log scale). B: number of transactions per hour (grey bars, right axis) and fraud rate per hour (orange, left axis) over the two days; the dashed line is the overall fraud rate of 0.17%.](figures/fig10_eda_creditcard.png){#fig-ccdata width=88%}

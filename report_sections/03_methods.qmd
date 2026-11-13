@@ -1,0 +1,196 @@
+<!-- Methods section -->
+
+# Methods {#sec-methods}
+
+Every simulated replicate and every real-data split was analysed with the
+same twelve methods: two classifiers, each fitted in six ways, a baseline and
+five remedies (@tbl-methods). All tuning and all rebalancing use the training
+data only; the test set is used once, to score the final predictions.
+
+| Approach | What changes | Cutoff |
+|---|---|---|
+| Baseline | nothing | 0.5 |
+| Over-sampling | positives copied until the classes are 50:50 | 0.5 |
+| Under-sampling | negatives dropped until the classes are 50:50 | 0.5 |
+| SMOTE | synthetic positives added until the classes are 50:50 | 0.5 |
+| Class weights | each positive weighted by #negatives / #positives | 0.5 |
+| Threshold moving | nothing; the cutoff is chosen from the training data | Youden |
+
+: The six approaches, each used with both classifiers. {#tbl-methods}
+
+## Classifiers {#sec-classifiers}
+
+Logistic regression models the log-odds of the positive class as a linear
+function of the predictors [@islr2, Section 4.3]. We fitted it with the lasso
+penalty [@islr2, Section 6.2.2], which maximizes the log-likelihood minus
+$\lambda \sum_j |\beta_j|$ and so shrinks small coefficients to exactly zero.
+We used `cv.glmnet()` [@friedman2010] with `alpha = 1` and chose $\lambda$ by
+10-fold cross-validation on the training set, taking `lambda.min`, the value
+with the smallest cross-validated deviance. With five predictors the penalty
+does little in the simulation, but it is a sensible choice for the 30
+predictors of the real data and it is the model we used in the course labs.
+We made one change to the default: the folds are stratified, built separately
+within each class, so that every fold contains some positives. With only 10
+positives in a training set, purely random folds can leave a fold with none.
+
+A random forest averages many classification trees, each grown on a bootstrap
+sample of the training data and, at each split, allowed to choose from only a
+random subset of $m$ predictors [@breiman2001; @islr2, Section 8.2.2]. We used
+`randomForest()` [@liaw2002] with 200 trees and the default
+$m = \lfloor\sqrt{p}\rfloor$, which is 2 of the 5 predictors in the simulation
+and 5 of the 30 in the real data. Trees are grown to full depth, the package
+default for classification, and the predicted probability is the fraction of
+trees that vote for the positive class.
+
+We chose these two classifiers because they sit at opposite ends of the
+flexibility scale. In the simulation the logistic model is correctly
+specified: apart from the extra noise variable, it is the true model. The
+forest makes no assumption about the shape of the boundary and has to learn
+the linear boundary from the data.
+
+## The remedies {#sec-remedies}
+
+All the remedies start from the same observation. A model fitted to data with
+very few positives, and used with a 0.5 cutoff, rarely calls anything
+positive. The remedies differ in where they intervene: in the data, in the
+fitting, or only in the decision.
+
+The resampling remedies change the training data so that it has as many
+positives as negatives, and then fit the classifier as usual with a 0.5
+cutoff [@he2009]. Over-sampling draws positives with replacement and adds
+them until the classes are the same size. It adds no new information; each
+positive is simply repeated, about $(1 - \pi)/\pi$ times on average.
+Under-sampling keeps all the positives and a random subset of negatives of
+the same size, so it throws most of the data away: at 1% prevalence and
+$n = 1{,}000$ the balanced set has about 20 rows. SMOTE, the synthetic
+minority over-sampling technique of @chawla2002, creates new positives
+between existing ones. For a randomly chosen positive $a$ it picks one of
+its $k = 5$ nearest positive neighbours $b$ and creates a new point
+$x_{\text{new}} = x_a + u\,(x_b - x_a)$, with $u$ drawn from a uniform
+distribution on $(0, 1)$, so the new point lies somewhere on the line between
+$a$ and $b$. We wrote our own short SMOTE function, using `FNN::get.knn()` to
+find the neighbours, so that every step was visible to us. SMOTE is still the
+most widely used imbalance method, although recent large comparisons find
+that its benefit shrinks or disappears for strong classifiers [@elor2022].
+
+Class weights change how much each row counts instead of changing the data.
+Each positive gets weight $w = n_0 / n_1$, the number of negatives divided by
+the number of positives, so the two classes carry the same total weight
+[@he2009]. In `cv.glmnet()` this is the `weights` argument, which multiplies
+each row's contribution to the log-likelihood. In `randomForest()` it is the
+`classwt` argument, which weights the classes in the Gini criterion used to
+choose splits.
+
+For logistic regression there is a clear theoretical expectation for both
+resampling and weighting. If positives are kept with probability $r_1$ and
+negatives with probability $r_0$, the log-odds in the resampled data equal
+the true log-odds plus $\log(r_1/r_0)$; only the intercept changes
+[@prentice1979]. Weighting the likelihood has the same effect in
+expectation. So when the logistic model is correct, a model fitted to
+rebalanced data should differ from the baseline only by a constant added to
+every log-odds. Adding a constant does not change the order of the
+predictions, so ranking measures such as ROC-AUC and PR-AUC should not change
+at all; only the probabilities, and the number of cases above 0.5, should
+move. The simulation tests this prediction and also asks what happens when
+the model is a forest, when positives are very few, and when the truth is not
+logistic. Recent simulation studies in medical prediction reached a similar
+expectation and found that these corrections mainly damage calibration
+[@vandengoorbergh2022; @carriero2025].
+
+Threshold moving leaves both the data and the model alone. It fits the
+baseline model and classifies a case as positive when its predicted
+probability exceeds a cutoff $t$ chosen from the training data. A cutoff has
+a direct meaning in terms of costs: flagging every case with $\hat p > t$ is
+the best decision when a missed positive costs $(1 - t)/t$ times as much as a
+false alarm [@elkan2001]. The usual cutoff of 0.5 therefore assumes that the
+two mistakes cost the same. We chose $t$ to maximize Youden's index,
+sensitivity plus specificity minus one [@youden1950], which is the same as
+maximizing balanced accuracy. To avoid choosing the cutoff on predictions the
+model has already fitted, we used predictions for training rows that the
+model did not use: the out-of-fold predictions saved by `cv.glmnet()` at the
+chosen $\lambda$ for the lasso, and the out-of-bag votes for the forest. The
+threshold approach therefore needs no extra model fits and never sees the
+test set. Because it uses the baseline model, its ROC-AUC and PR-AUC equal
+the baseline's by construction, which also served as a check on our code.
+
+## Measuring performance {#sec-metrics}
+
+For each method we predicted $P(y = 1)$ for every test case and compared the
+predictions with the true classes. Write TP and FN for positives that were
+caught and missed, and TN and FP for negatives that were correctly cleared
+and wrongly flagged. The measures below follow @islr2 [Tables 4.6 and 4.7].
+
+Accuracy, $(TP + TN)/(TP + TN + FP + FN)$, is the share of cases classified
+correctly. We report it only to show how misleading it is: under strong
+imbalance it is close to $1 - \pi$ for any model that rarely flags anything,
+and it cannot tell useful models from useless ones [@chicco2020].
+
+Sensitivity (recall), $TP/(TP + FN)$, is the share of positives that are
+caught, and specificity, $TN/(TN + FP)$, is the share of negatives that are
+correctly cleared. Together they describe the two kinds of error. Precision,
+$TP/(TP + FP)$, is the share of flagged cases that really are positive; it
+tells an investigator how many false alarms come with each real case. The
+$F_1$ score, $2 \cdot \text{precision} \cdot \text{sensitivity} /
+(\text{precision} + \text{sensitivity})$, combines precision and sensitivity
+into one number, and balanced accuracy, the average of sensitivity and
+specificity, is accuracy with both classes given equal weight. All of these
+depend on the cutoff, and so on each remedy's choice of operating point.
+@chicco2020 discuss how single-number summaries such as $F_1$ and accuracy can
+mislead under imbalance, which is why we look at several measures together.
+
+ROC-AUC and PR-AUC do not depend on a cutoff. They summarize how well the
+predicted probabilities *rank* positives above negatives over every possible
+cutoff. ROC-AUC is the area under the curve of sensitivity against
+$1 - \text{specificity}$; it equals the probability that a randomly chosen
+positive gets a higher score than a randomly chosen negative, so 0.5 is a
+coin flip and 1 is perfect [@islr2, Section 4.4.2]. PR-AUC is the area under
+the curve of precision against sensitivity. It concentrates on the rare class
+and is more informative than ROC-AUC under imbalance [@saito2015]: a random
+ranking gets a PR-AUC equal to the prevalence, so 0.01 at 1% prevalence,
+while it always gets an ROC-AUC of 0.5. We computed both with the `ROCR`
+package [@sing2005]. These two measures are how we define improving
+prediction. A remedy improves prediction if it raises ROC-AUC or PR-AUC; if it
+only raises sensitivity, it has moved the operating point.
+
+Calibration is the third aspect of prediction. A model is calibrated if,
+among cases given a probability of about 5%, about 5% are positive. We
+checked calibration in two simple ways: the mean predicted probability on the
+test set, which should match the prevalence, and the Brier score, the mean
+of $(\hat p - y)^2$, where lower is better.
+
+Because we know the true probabilities in the simulation, we can also score
+the truth itself. The ROC-AUC and PR-AUC of the true probabilities, which we
+call the Bayes benchmark, are the best any method can achieve on that test
+set (@tbl-sanity), and we report each method's gap to it, in the same way the
+course deck compares test error with the irreducible error. For the
+cutoff-based measures we cut the true probabilities at the prevalence, which
+maximizes sensitivity plus specificity. The usual Bayes classifier cuts at
+0.5 and minimizes the overall error rate [@islr2, Section 2.2.3], which under
+imbalance is exactly the wrong goal.
+
+## Comparing methods and Monte Carlo error {#sec-mcse}
+
+Because all methods see the same data sets, we compared each remedy with the
+baseline replicate by replicate. For replicate $b$ and a measure $M$ we
+computed the change $d_b = M_b(\text{remedy}) - M_b(\text{baseline})$, and we
+report the mean change $\bar d$ over the $B$ replicates together with its
+Monte Carlo standard error [@morris2019],
+
+$$
+\text{MCSE}(\bar d) = \frac{\text{sd}(d_1, \dots, d_B)}{\sqrt{B}}.
+$$
+
+Pairing removes the variation that comes from the data set itself, so the
+MCSE of a change is much smaller than the MCSE of either method's own mean.
+Error bars in the figures are $\pm 2$ MCSE. We call a difference a finding
+only if it is larger than 2 MCSE *and* at least 0.005, a size that would
+matter in practice. With $B = 100$ per setting, or 200 when we pool the two
+separation levels, most MCSEs are below 0.002. On the real data the
+replicates are the 10 splits, and we report the mean change with its
+standard error across splits. The splits share most of their training rows,
+so these standard errors are somewhat optimistic, and we treat real-data
+differences smaller than about 0.01 with caution.
+
+In total the simulation fitted $1{,}600 \times 12 = 19{,}200$ models and the
+real data $10 \times 12 = 120$, plus the EasyEnsemble fits described in
+@sec-ensemble.

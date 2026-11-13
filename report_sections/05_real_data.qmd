@@ -1,0 +1,84 @@
+<!-- Real-data results -->
+
+# Real data: credit card fraud {#sec-real}
+
+We applied all twelve methods to the 10 stratified splits of the credit card
+data described in @sec-realdata. Each test set has 85,442 transactions, 148 of
+them fraud. @tbl-real gives the mean over the 10 splits for every method,
+together with the trivial rule that never flags fraud.
+
+```{r}
+#| label: tbl-real
+#| tbl-cap: "Real data: mean over 10 stratified 70/30 splits (standard error over splits in brackets). Sensitivity and precision use each method's own cutoff."
+rt <- read.csv("results/table_real.csv")
+ord <- c("baseline", "oversample", "undersample", "smote", "weights", "threshold")
+rt <- rt[order(rt$classifier != "logistic", match(rt$approach, ord)), ]
+cell <- function(m, s) sprintf("%.3f (%.3f)", m, s)
+none <- real[real$approach == "always-not-fraud", ]
+tab <- data.frame(
+  Classifier = c("None", ifelse(rt$classifier == "logistic", "Lasso logistic", "Random forest")),
+  Approach = c("Always \"not fraud\"",
+               c(baseline = "Baseline", oversample = "Over-sampling", undersample = "Under-sampling",
+                 smote = "SMOTE", weights = "Class weights", threshold = "Threshold")[rt$approach]),
+  `ROC-AUC` = c(f3(mean(none$roc.auc)), cell(rt$roc.auc_mean, rt$roc.auc_se)),
+  `PR-AUC` = c(f3(mean(none$pr.auc)), cell(rt$pr.auc_mean, rt$pr.auc_se)),
+  Sensitivity = c(f3(mean(none$sensitivity)), cell(rt$sensitivity_mean, rt$sensitivity_se)),
+  Precision = c("--", cell(rt$precision_mean, rt$precision_se)),
+  Accuracy = c(sprintf("%.4f", mean(none$accuracy)), sprintf("%.4f", rt$accuracy_mean)),
+  check.names = FALSE)
+kable(tab, booktabs = TRUE, row.names = FALSE, align = "llrrrrr")
+```
+
+**The accuracy trap is real.** The rule that never flags fraud is 99.83%
+accurate and catches nothing. Every fitted model is also above 97% accurate,
+so accuracy cannot tell the methods apart; we do not use it further.
+
+**Both baselines rank very well.** The baseline lasso has ROC-AUC 0.977 and
+the baseline forest 0.949, so both models separate fraud from normal
+transactions far better than in the simulation. At the default 0.5 cutoff
+the lasso catches 61% of frauds and the forest 72%, both with precision near
+0.9: when they raise an alarm, it is usually a fraud. Note that the forest has
+the *higher* PR-AUC (0.797 against 0.764) despite the lower ROC-AUC. As in the
+simulation, its probabilities have many ties at zero, which costs ROC-AUC, but
+it puts the frauds it does recognise at the very top of the ranking, which is
+what PR-AUC rewards.
+
+@fig-real shows each remedy's change from its own baseline on the same split.
+
+![Real data: change from the baseline on the same split, mean over 10 splits, bars $\pm 2$ SE.](figures/fig5_real_change.png){#fig-real width=85%}
+
+**Lasso: the same story as the simulation, but worse.** No remedy changes the
+lasso's ROC-AUC by more than 0.002. But all four resampling and weighting
+remedies *lower* PR-AUC, and by much more than in the simulation:
+over-sampling by 0.047 (SE 0.006), SMOTE by 0.051 (0.005), class weights by
+0.070 (0.010) and under-sampling by 0.190 (0.034). The threshold, which uses
+the baseline model, leaves PR-AUC unchanged. Every lasso remedy, including the
+threshold, raises sensitivity from 0.61 to about 0.90.
+
+**Forest: a real improvement.** Over-sampling and SMOTE raise the forest's
+ROC-AUC by 0.028 and 0.034 and its PR-AUC by 0.023 (SE 0.012) and 0.031
+(SE 0.008). Forest + SMOTE has the highest PR-AUC of all twelve methods,
+0.828, and the highest ROC-AUC, 0.983. This is the first place in the study
+where a remedy improves prediction and not only the operating point.
+Under-sampling again splits the two measures: ROC-AUC up 0.028, PR-AUC down
+0.060. Class weights lower PR-AUC slightly and cut sensitivity from 0.72 to
+0.45, the opposite of their purpose, as in the simulation.
+
+## What catching more fraud costs
+
+Sensitivity is only half of the decision; the other half is how many false
+alarms an investigator must check. @fig-tradeoff plots each method's
+sensitivity against its precision.
+
+![Real data: sensitivity against precision for each method at its own cutoff, mean over 10 splits. Up and to the right is better.](figures/fig6_real_tradeoff.png){#fig-tradeoff width=75%}
+
+Every lasso remedy lands in the same place: about 90% of frauds caught at a
+precision of 6 to 8%, that is about 12 to 15 false alarms for every real
+fraud. On a test set of 85,442 transactions, that is roughly 2,000 alarms to
+find about 133 frauds. The lasso threshold reaches the same point without
+refitting. The forest offers better trade-offs: SMOTE catches 85% of frauds at
+60% precision (fewer than one false alarm per fraud), over-sampling 83% at 78%.
+Which point is best depends on what a missed fraud costs compared with an
+investigation, and that is a business decision, not a statistical one. The
+threshold makes that choice explicit; the remedies make it implicitly, through
+the 50:50 balance.

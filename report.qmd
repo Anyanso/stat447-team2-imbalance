@@ -4,14 +4,44 @@ subtitle: "STAT 447/847 Course Project, Team 2"
 author:
   - "John Anyanso"
   - "Nidhi Prajapati"
-  - "Ambali Wadud"
-date: today
+  - "Ambali Wadud (STAT 847)"
+date: "November 29, 2026"
+abstract: |
+  When one class is rare, a classifier can be very accurate and still useless.
+  Three remedies are commonly used: resampling the training data, weighting
+  the rare class, and moving the classification threshold. We asked whether
+  these remedies improve *prediction* (how well the model ranks positives
+  above negatives) or only improve a *metric* (sensitivity at a fixed
+  cutoff). We simulated 1,600 data sets from a known logistic model across
+  four prevalences, two sample sizes and two levels of class separation,
+  fitted lasso logistic regression and random forests with each remedy, and
+  then repeated the comparison on 284,807 real credit card transactions.
+  Every remedy raised sensitivity, often from below 0.1 to about 0.7, but for
+  logistic regression none improved ROC-AUC or PR-AUC, and resampling and
+  weights distorted the predicted probabilities. Moving the threshold gave
+  the same sensitivity with no refitting and honest probabilities. Random
+  forests behaved differently: under-sampling, and on the real data SMOTE,
+  improved their ranking when positives were very rare. As the STAT 847
+  extension we built EasyEnsemble, which helped forests but not logistic
+  regression. An independent second implementation of the study reached the
+  same conclusions.
 format:
   pdf:
+    documentclass: article
     fontsize: 11pt
     geometry: margin=1in
+    linestretch: 1
     number-sections: true
     toc: true
+    toc-depth: 1
+    colorlinks: true
+    fig-pos: "H"
+    tbl-cap-location: top
+    include-in-header:
+      text: |
+        \usepackage{float}
+        \usepackage{booktabs}
+bibliography: references.bib
 execute:
   echo: false
   warning: false
@@ -21,48 +51,42 @@ execute:
 ```{r}
 #| label: setup
 source("R/00_setup.R")
+library(knitr)
+sim     <- readRDS("results/sim_results.rds")
+paired  <- readRDS("results/sim_paired.rds")
+real    <- readRDS("results/real_results.rds")
+beta0   <- readRDS("results/beta0_table.rds")
+f3 <- function(x) sprintf("%.3f", x)
+pct <- function(x) paste0(100 * x, "%")
 ```
 
-# Introduction {#sec-intro}
+<!-- Each section lives in its own file in report_sections/, so we can
+     edit our own parts without merge conflicts. The owner of each file is
+     written at its top. -->
 
-<!-- Shared. When positives are rare, accuracy is misleading. Our question:
-     do the standard approaches improve prediction, or only the metric? -->
+{{< include report_sections/01_introduction.qmd >}}
 
-# Methods {#sec-methods}
+{{< include report_sections/02_data.qmd >}}
 
-## Simulation design
+{{< include report_sections/03_methods.qmd >}}
 
-<!-- John Anyanso: the logistic model, beta0 via uniroot, design grid, seed 447. -->
+{{< include report_sections/04_simulation_results.qmd >}}
 
-## The three approaches
+{{< include report_sections/05_real_data.qmd >}}
 
-<!-- A. Resampling (John Anyanso), B. Class weights (Nidhi Prajapati),
-     C. Threshold (Ambali Wadud). Both classifiers. Training-only rules. -->
+{{< include report_sections/06_reconcile.qmd >}}
 
-## Evaluation
+{{< include report_sections/07_ensemble.qmd >}}
 
-<!-- Nidhi Prajapati: the seven metrics, the Bayes benchmark, MCSE. -->
+{{< include report_sections/08_robustness.qmd >}}
 
-# Simulation results {#sec-sim}
-
-```{r}
-#| label: sim-results
-# sim <- readRDS("results/sim_summary.rds")
-```
-
-# Real data: credit card fraud {#sec-real}
-
-<!-- Nidhi Prajapati -->
-
-# Reconciling simulation and real data {#sec-reconcile}
-
-# STAT 847 extension: EasyEnsemble {#sec-ensemble}
-
-<!-- Ambali Wadud -->
-
-# Conclusion {#sec-conclusion}
+{{< include report_sections/09_conclusion.qmd >}}
 
 # References {.unnumbered}
 
-James, G., Witten, D., Hastie, T., Tibshirani, R. (2021). *An Introduction to
-Statistical Learning with Applications in R* (2nd ed.). Springer.
+::: {#refs}
+:::
+
+\appendix
+
+{{< include report_sections/10_appendix.qmd >}}

@@ -1,0 +1,55 @@
+<!-- Shared section -->
+
+# Introduction {#sec-intro}
+
+In many classification problems the class we care about is rare. Fraudulent
+card payments, a rare disease picked up in screening, or a machine part that
+is about to fail can each make up 1% of cases or far fewer. In the credit card
+data we use later, only 492 of 284,807 transactions (0.17%) are fraud. A
+"classifier" that calls every transaction normal is therefore 99.83% accurate,
+and it never catches a single fraud. Fraud teams face exactly this problem in
+practice, where the rare class is also the expensive one
+[@carcillo2021; @leborgne2022].
+
+This is the class imbalance problem. Overall accuracy rewards a model for
+ignoring the rare class, and a model fitted by maximum likelihood and used
+with the usual 0.5 cutoff flags very few cases as positive. Three kinds of
+remedy are commonly recommended [@he2009]. The first is resampling: change
+the training data so the two classes are the same size, either by copying
+rare-class rows (over-sampling), dropping common-class rows (under-sampling),
+or creating synthetic rare-class rows with SMOTE [@chawla2002]. The second is
+to give each rare-class row a larger weight in the fit. The third is to keep
+the model as it is and lower the cutoff above which a case is called
+positive.
+
+All three make the model flag more positives, so sensitivity goes up. That is
+not the same thing as a better model. A model predicts well when it ranks
+positives above negatives and when its probabilities can be trusted.
+Sensitivity at a single cutoff mixes the quality of the model with the choice
+of cutoff, so a remedy can raise it without the model having learned anything
+new. Recent work in medical risk prediction has raised exactly this concern,
+finding that imbalance corrections can make logistic models worse calibrated
+without making them better at telling the classes apart
+[@vandengoorbergh2022; @carriero2025]. Whether SMOTE in particular helps
+strong classifiers has also been questioned [@elor2022]. Our research
+question is therefore:
+
+> **When positives are rare, do the standard remedies improve prediction, or
+> do they only improve the metric?**
+
+We study it in two ways. The first is a simulation study in which we write
+down the true model ourselves, so we know the best performance any method
+could reach and can tell a real improvement from a shifted cutoff. The second
+is the Kaggle credit card fraud data [@dalpozzolo2015], where the truth is
+unknown but the problem is a real one. We use two classifiers from opposite
+ends of the flexibility scale covered in the course: lasso logistic
+regression [@islr2, Section 6.2.2] and random forests [@islr2, Section 8.2.2].
+For the STAT 847 part of the project we also build EasyEnsemble [@liu2009],
+which combines several under-sampled models, and ask whether combining weak
+learners does better than any single remedy. Finally, one of us wrote a
+second, independent version of the whole study with different software,
+which we use as a robustness check.
+
+All three team members contributed equally to this project. The code, saved
+results and the source of this report are on GitHub at
+<https://github.com/Anyanso/stat447-team2-imbalance>.

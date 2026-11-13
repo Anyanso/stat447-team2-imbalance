@@ -1,0 +1,208 @@
+<!-- Simulation results -->
+
+# Simulation results {#sec-sim}
+
+We present the results in the order of the argument: the baseline fails on
+the cutoff-based measures (@sec-sim-baseline), every remedy fixes sensitivity
+(@sec-sim-sens), but for logistic regression none improves the ranking
+(@sec-sim-rank), and resampling and weights distort the probabilities while
+the threshold does not (@sec-sim-calib). The full table of changes with their
+MCSEs is in Appendix @sec-app-tables.
+
+## The baseline: accurate and nearly useless {#sec-sim-baseline}
+
+```{r}
+#| label: tbl-baseline
+#| tbl-cap: "Baseline models (0.5 cutoff), averaged over both sample sizes and separations (400 replicates per cell)."
+bl <- sim[sim$approach == "baseline", ]
+t1 <- aggregate(cbind(accuracy, sensitivity, roc.auc, pr.auc) ~ classifier + prev, bl, mean)
+t1 <- t1[order(t1$classifier, -t1$prev), ]
+t1$classifier <- ifelse(t1$classifier == "logistic", "Lasso logistic", "Random forest")
+t1$prev <- pct(t1$prev)
+t1[, 3:6] <- lapply(t1[, 3:6], f3)
+names(t1) <- c("Classifier", "Prevalence", "Accuracy", "Sensitivity", "ROC-AUC", "PR-AUC")
+kable(t1, booktabs = TRUE, row.names = FALSE, align = "llrrrr")
+```
+
+@tbl-baseline shows the problem the remedies are meant to solve. At 1%
+prevalence both baseline models are 99% accurate, but the lasso catches only
+about 4% of positives and the forest about 2%. Accuracy is almost exactly
+$1 - \pi$, what the "always negative" rule would score. Yet the ROC-AUCs
+show the models *can* rank: the lasso's 0.80 is far above the 0.5 of a coin
+flip. The models know which cases look risky; the 0.5 cutoff simply puts
+almost all of them below the line. This is the first hint that the problem is
+the cutoff, not the model.
+
+## Every remedy raises sensitivity {#sec-sim-sens}
+
+@fig-sens shows the change in sensitivity from the baseline, paired on the
+same data sets. For the lasso every remedy raises sensitivity by about 0.6 to
+0.7 at 1% and 5% prevalence, and by about 0.44 at 20%. For the forest,
+under-sampling and the threshold give similar gains; SMOTE gives about a
+third as much, over-sampling very little, and class weights actually *lower*
+sensitivity slightly. At 50% prevalence nothing changes, as it should: the
+data are already balanced.
+
+![Change in sensitivity from the baseline (same data sets), pooled over the two separation levels: 200 replicates per point. Bars are $\pm 2$ MCSE, mostly smaller than the points.](figures/fig3_change_sensitivity.png){#fig-sens width=85%}
+
+Judged by sensitivity, the remedies "work", and this is the evidence usually
+given for them. The rest of this section asks whether anything else improved.
+
+## For logistic regression, the ranking does not move {#sec-sim-rank}
+
+@fig-roc shows the change in ROC-AUC. For the lasso the changes are
+essentially zero: at $n = 20{,}000$ every remedy is within 0.005 of the
+baseline in every one of the eight settings (Appendix @tbl-app-change). This is what the
+intercept-only argument in @sec-remedies predicts. When the logistic model is
+correct, resampling and weighting shift every log-odds by the same constant,
+which cannot change the ranking.
+
+![Change in ROC-AUC from the baseline (same data sets), 200 replicates per point, bars $\pm 2$ MCSE. For the lasso, every remedy sits on zero except at $n = 1{,}000$ and 1% prevalence.](figures/fig2_change_roc_auc.png){#fig-roc width=85%}
+
+The one place the lasso moves is the hardest setting, $n = 1{,}000$ and 1%
+prevalence, where a training set has about 10 positives. There,
+under-sampling *lowers* ROC-AUC by 0.056 (MCSE 0.006), because the balanced
+training set has only about 20 rows. Over-sampling and SMOTE *raise* it, by
+0.014 and 0.016 (MCSE 0.004). The reason is a failure of the baseline rather
+than a strength of resampling: with so few positives, cross-validation
+sometimes chooses a $\lambda$ large enough to set every slope to zero, giving
+the same prediction for every case and an ROC-AUC of exactly 0.5. This
+happened in 25 of the 100 low-separation replicates for the baseline, never
+after over-sampling or SMOTE, and in 42 after under-sampling. So with very
+few positives, over-sampling can protect the lasso from shrinking to nothing.
+Once there are enough positives ($n = 20{,}000$), the effect disappears.
+
+**Forests are different.** For the random forest, under-sampling raises
+ROC-AUC by 0.048 at 1% prevalence ($n = 1{,}000$) and 0.049
+($n = 20{,}000$), both with MCSE of 0.003 or less, and by about 0.014 at 5%.
+SMOTE helps at 1% (+0.022 and +0.016). Class weights *lower* ROC-AUC by up to
+0.019. A forest has no intercept that resampling could shift, so resampling
+changes the trees themselves. Our explanation for the gain is the forest's
+coarse probabilities. With 1% positives, most leaves of a fully grown tree
+contain no positives, so many test cases receive zero votes from every tree
+and are tied at a predicted probability of 0. In the first replicate at 1%
+prevalence ($n = 1{,}000$, high separation), 64% of the 20,000 test cases
+had a predicted probability of exactly 0 from the baseline forest, and only
+0.5% after under-sampling. Ties cannot be ranked, which lowers ROC-AUC.
+Under-sampling gives every tree as many positives as negatives, so nearly
+every case gets some votes and the ties break.
+The weak effect of `classwt` is a known property of `randomForest()`: it
+weights the split criterion but does not change which rows each tree sees.
+
+@fig-gap uses PR-AUC, the measure that focuses on the rare class, and shows
+each method's gap to the Bayes benchmark. Lower is better, and zero would mean
+as good as the true probabilities.
+
+![PR-AUC gap to the Bayes benchmark (true probabilities minus method), 200 replicates per point, bars $\pm 2$ MCSE. No remedy brings either classifier closer to the best possible than the baseline; for the forest, resampling and weights move it further away.](figures/fig4_gap_pr_auc.png){#fig-gap width=85%}
+
+For the lasso at $n = 20{,}000$ every method is within 0.01 of the best
+possible PR-AUC, and the remedies do not close the small remaining gap. For
+the forest, *every* resampling remedy makes the gap larger. At 1%
+prevalence and $n = 20{,}000$ the forest loses 0.050 PR-AUC with
+over-sampling, 0.084 with SMOTE and 0.055 with under-sampling (all MCSE 0.003
+or less). This includes under-sampling, which *raised* the forest's ROC-AUC.
+The two measures disagree because they look at different parts of the
+ranking. ROC-AUC counts every positive–negative pair, so breaking the mass of
+ties at zero helps it. PR-AUC is driven by the top of the ranking, where the
+alarms are raised. A forest trained on 50:50 data gives high probabilities to
+many more negatives, so the top of the ranking contains more false alarms and
+precision falls.
+
+## The threshold gives the same gains and honest probabilities {#sec-sim-calib}
+
+If the remedies do not improve the ranking, what do they change? They change
+the predicted probabilities. A model is *calibrated* if, among cases given a
+probability of about 5%, about 5% are positive. A simple check is
+"calibration in the large": the average predicted probability on the test
+set should equal the prevalence. We refitted the remedies on 5 replicates per
+setting ($n = 20{,}000$, high separation), using the same seeds, so the fits
+are identical to those in the main study (the ROC-AUCs match exactly), and
+recorded the mean predicted probability and the Brier score, the mean of
+$(\hat p - y)^2$ (lower is better).
+
+```{r}
+#| label: tbl-calib
+#| tbl-cap: "Calibration in the large: mean predicted probability and Brier score on the test set (n = 20,000, high separation, 5 replicates per setting). The threshold approach uses the baseline model, so it has the baseline's probabilities. Source: analysis/11_calibration.R."
+cal <- read.csv("results/table_calibration.csv")
+cal$approach <- factor(cal$approach,
+                       levels = c("baseline", "oversample", "undersample", "smote", "weights"),
+                       labels = c("Baseline / threshold", "Over-sampling", "Under-sampling",
+                                  "SMOTE", "Class weights"))
+cal$cell <- sprintf("%.3f (%.3f)", cal$mean.prob, cal$brier)
+cal$prev.lab <- pct(cal$prev)
+cw <- reshape(cal[, c("classifier", "approach", "prev.lab", "cell")],
+              idvar = c("classifier", "approach"), timevar = "prev.lab", direction = "wide")
+names(cw) <- sub("cell.", "", names(cw))
+cw <- cw[order(cw$classifier != "logistic", cw$approach), c("classifier", "approach", "1%", "5%", "20%")]
+cw$classifier <- ifelse(cw$classifier == "logistic", "Lasso logistic", "Random forest")
+names(cw)[1:2] <- c("Classifier", "Approach")
+kable(cw, booktabs = TRUE, row.names = FALSE, align = "llrrr")
+```
+
+@tbl-calib gives the mean predicted probability, with the Brier score in
+brackets. The baseline lasso is well calibrated: at 1% prevalence its average
+prediction is 0.010. Every remedy raises the average to about 0.2 at 1%
+prevalence, 0.25 at 5% and 0.36 at 20%. At 1% the model now "believes"
+positives are about 20 times more common than they are, and its Brier score
+is about 12 times worse (0.10 against 0.009). For the forest, under-sampling has the same effect (0.25 at 1%)
+and SMOTE a smaller one; over-sampling and class weights change the forest's
+probabilities little, which matches their small effect on sensitivity in
+@fig-sens.
+
+The threshold approach reaches the same sensitivity without this cost.
+@tbl-example compares the baseline, over-sampling and the threshold for the
+lasso at 5% prevalence and $n = 20{,}000$.
+
+```{r}
+#| label: tbl-example
+#| tbl-cap: "Lasso logistic regression at 5% prevalence, n = 20,000, high separation: mean over 100 replicates (mean predicted probability: 5 replicates, from the calibration table above)."
+ex <- sim[sim$classifier == "logistic" & sim$prev == 0.05 & sim$n == 20000 &
+          sim$sep.level == "high" & sim$approach %in% c("baseline", "oversample", "threshold"), ]
+te <- aggregate(cbind(cutoff, sensitivity, specificity, roc.auc, pr.auc) ~ approach, ex, mean)
+mp <- cal$mean.prob[cal$classifier == "logistic" & cal$prev == 0.05]
+names(mp) <- c("baseline", "oversample", "undersample", "smote", "weights")[match(
+  as.character(cal$approach[cal$classifier == "logistic" & cal$prev == 0.05]),
+  c("Baseline / threshold", "Over-sampling", "Under-sampling", "SMOTE", "Class weights"))]
+te$mean.prob <- c(baseline = mp[["baseline"]], oversample = mp[["oversample"]],
+                  threshold = mp[["baseline"]])[te$approach]
+te$approach <- c(baseline = "Baseline", oversample = "Over-sampling",
+                 threshold = "Threshold (baseline model)")[te$approach]
+te[, 2:7] <- lapply(te[, 2:7], f3)
+names(te) <- c("Approach", "Cutoff", "Sensitivity", "Specificity", "ROC-AUC", "PR-AUC",
+               "Mean predicted P")
+kable(te, booktabs = TRUE, row.names = FALSE, align = "lrrrrrr")
+```
+
+Over-sampling and the threshold reach nearly the same sensitivity and
+specificity, with identical ranking. The difference is *how*. Over-sampling
+refits the model on altered data and inflates every probability, so the cutoff
+of 0.5 now sits where the true probability is about 0.05. The threshold keeps
+the honest model and moves the cutoff to about 0.05 directly. The two routes
+lead to the same decisions, but only the threshold leaves probabilities
+that can still be read as probabilities, which matters whenever the number
+itself is used: to set a price, to rank cases by urgency, or to explain a
+decision. The threshold also needs no refitting and states the cost
+trade-off openly: a cutoff of 0.05 says a missed positive is treated as
+$(1 - 0.05)/0.05 = 19$ times as costly as a false alarm. This agrees with
+@vandengoorbergh2022, who reached the same conclusion for logistic risk
+models in medicine.
+
+## What the simulation shows
+
+Taken together, the simulation gives a clear picture. Every remedy raises
+sensitivity, often from below 0.1 to about 0.7, which is why they look
+successful when sensitivity is the measure. For the correctly specified lasso,
+however, none of them improves ROC-AUC or PR-AUC once there are enough
+positives to learn from. The only exception is the setting with about 10
+positives, where over-sampling and SMOTE help by stopping the lasso from
+shrinking to a model with no slopes, and under-sampling makes things worse.
+What resampling and weights do change is the probabilities, which they
+inflate about 20-fold at 1% prevalence and 5-fold at 5%. Moving the threshold
+reaches the same sensitivity and keeps the probabilities calibrated.
+
+The forest tells a different story. Under-sampling and SMOTE raise its
+ROC-AUC at 1% prevalence, but every resampling method lowers its PR-AUC, and
+class weights hurt both. Finally, sample size matters at least as much as
+balance. Going from $n = 1{,}000$ to $n = 20{,}000$ at 1% prevalence raises
+the baseline ROC-AUC by about 0.05 for both classifiers, as much as the best
+remedy, and it raises PR-AUC, which no remedy does.

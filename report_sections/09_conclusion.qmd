@@ -1,0 +1,94 @@
+<!-- Discussion and conclusion (all three to read and agree) -->
+
+# Discussion and conclusion {#sec-conclusion}
+
+We set out to ask whether the standard remedies for class imbalance improve
+prediction or only improve the metric. Our answer is that it depends on the
+model, and that for the most common model, logistic regression, they mostly
+improve the metric.
+
+For logistic regression the remedies change the operating point, not the
+ranking. Over-sampling, under-sampling, SMOTE and class weights all raised
+sensitivity, often from below 0.1 to about 0.7 in the simulation and from 0.61
+to about 0.90 on the credit card data. None of them improved ROC-AUC or
+PR-AUC once there were a reasonable number of positives, and on the real data
+they lowered PR-AUC by between 0.05 and 0.19. When the logistic model is
+correct this is exactly what theory predicts, because rebalancing only shifts
+the intercept and cannot change the order of the predictions. Our exploratory
+look at the simulated data (@fig-simprob) explains why the remedies seem to
+work at all: under strong imbalance even the true probabilities almost never
+exceed 0.5, so the problem was the cutoff all along.
+
+What the remedies do change is the probabilities. At 1% prevalence,
+resampling and weights made the lasso's average predicted probability about
+20 times too large. Moving the threshold reached the same sensitivity with the
+original model, without refitting, and kept the probabilities honest. It also
+makes the cost assumption explicit, since the chosen cutoff states how much
+worse a missed positive is than a false alarm. This agrees with recent
+simulation studies of risk prediction models
+[@vandengoorbergh2022; @carriero2025], and for logistic models we think the
+threshold should be the default remedy.
+
+Flexible models are different, and there a remedy can genuinely improve
+prediction. Rebalancing changes the trees themselves, not just an intercept.
+Under-sampling raised the forest's ROC-AUC by about 0.05 at 1% prevalence in
+the simulation, and on the real data SMOTE gave the best method of all, with
+ROC-AUC 0.983 and PR-AUC 0.828. These gains depend on the measure, though.
+In the simulation the same remedies lowered the forest's PR-AUC, and class
+weights in `randomForest()` hurt in every setting. Part of the real-data gain
+may also come from our own choice to grow each tree on 20,000 rows. This
+fits the view of @elor2022 that balancing helps mainly when the classifier
+on its own handles rare classes poorly.
+
+The STAT 847 extension asked whether combining weak learners does better
+than any single remedy. EasyEnsemble beat every single remedy on the forest's
+ROC-AUC and balanced accuracy in 11 of the 12 imbalanced settings, with the
+gain growing as positives became rarer. It did not help the lasso, and it did
+not improve PR-AUC. Averaging helps a learner that is unstable, not one that
+is already stable and correctly specified, which is the same lesson the
+course drew for bagging.
+
+Two broader lessons follow. First, a model should be judged on its ranking
+before its cutoff is chosen. Accuracy is useless under imbalance and
+sensitivity alone rewards any method that flags more cases, so we would
+compare models by PR-AUC, with ROC-AUC alongside, and then choose the cutoff
+from the real costs of a missed positive and a false alarm. Second, more
+positives are worth more than rebalanced positives. Going from about 10 to
+about 200 positives, from $n = 1{,}000$ to $n = 20{,}000$ at 1% prevalence,
+improved every baseline at least as much as the best remedy did. Rebalancing
+cannot create information that the data do not contain. An independent
+second implementation of the whole study, written with different packages and
+design choices, reached the same conclusions, which gives us confidence that
+they do not depend on our particular code.
+
+## Limitations and further work
+
+Our simulated truth is a single logistic model with linear effects and
+smoothly spread positives, which is the best case for logistic regression.
+The real data show that the conclusions can change when the model is wrong,
+so a natural next step is a non-linear or clustered truth, for example
+positives generated in a few small clusters, to test our explanation of why
+SMOTE helps the forest on real data. On the real data, each tree used only
+20,000 rows, so the baseline forest saw about 35 frauds per tree; rerunning
+the baseline with a stratified sample for each tree would show how much of the
+forest's gain comes from resampling itself.
+
+We also used only two classifiers and one rebalancing ratio. Boosting, which
+is widely used for fraud [@leborgne2022], and partial rebalancing, which the
+second implementation tried, would both be worth adding. The 10 real-data
+splits share most of their data, so their standard errors are optimistic, and
+the data cover only two days; a time-ordered split, as in the second
+implementation, is closer to how a fraud model is actually used. Finally, we
+measured calibration on only 5 replicates per setting, which is enough to show
+how large the distortion is but not its full spread.
+
+## Reproducibility
+
+Everything in this report can be reproduced from the GitHub repository. The
+seed is 447, set once in `R/00_setup.R`, and every replicate and method has
+its own derived seed (@sec-simdata), so the results do not depend on the
+order in which methods are run or on the number of cores. Rerunning stored
+replicates reproduces their results exactly. The scripts in `analysis/` are
+numbered in the order they should be run (Appendix @sec-app-code), and the
+report itself only reads the saved results in `results/`; it never reruns the
+simulation.
